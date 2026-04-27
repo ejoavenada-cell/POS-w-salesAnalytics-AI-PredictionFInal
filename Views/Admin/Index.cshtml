@@ -1,0 +1,395 @@
+@model FoodOrderingSytemAIAnalytics.Models.ViewModels.DashboardAnalyticsViewModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Executive Dashboard";
+    var currentPeriod = ViewBag.CurrentPeriod as string ?? "7";
+}
+
+<style>
+    .glass-card {
+        background: white;
+        border-radius: 28px;
+        border: 1px solid #E5E7EB;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        padding: 2rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .glass-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+    }
+    .top-dish-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.25rem;
+        border-radius: 20px;
+        background: #F9FAFB;
+        margin-bottom: 1rem;
+        border: 1px solid transparent;
+        transition: all 0.2s;
+    }
+    .top-dish-card:hover {
+        background: white;
+        border-color: var(--primary-color);
+        box-shadow: 0 4px 12px rgba(45, 159, 150, 0.1);
+    }
+    .flame-1 { color: #EF4444; filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.4)); font-size: 1.4rem; }
+    .flame-2 { color: #F59E0B; font-size: 1.2rem; }
+    .flame-3 { color: #FCD34D; font-size: 1rem; }
+    
+    .period-btn {
+        padding: 0.6rem 1.25rem;
+        border-radius: 12px;
+        border: 1px solid #E5E7EB;
+        background: white;
+        font-size: 0.8rem;
+        font-weight: 800;
+        color: #6B7280;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+    .period-btn.active {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+        box-shadow: 0 4px 10px rgba(45, 159, 150, 0.3);
+    }
+</style>
+
+<div class="section-bar" style="margin-bottom: 2.5rem;">
+    <div>
+        <h2 style="font-size: 2rem; font-weight: 900; color: #1F2937; margin-bottom: 0.25rem;">Analytics Command Center</h2>
+        <span class="count" style="font-size: 0.95rem; font-weight: 600;">Intelligence & Performance monitoring</span>
+    </div>
+    <div style="display: flex; gap: 1rem; align-items: center;">
+        <div style="padding: 0.75rem 1.5rem; background: white; border: 1px solid #E5E7EB; border-radius: 16px; display:flex; align-items:center; gap:1rem; font-weight:800; color: #1F2937; font-size: 0.9rem; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+            <i class="far fa-calendar-alt" style="color: var(--primary-color); font-size: 1.1rem;"></i>
+            <span>@DateTime.Now.ToString("MMMM dd, yyyy")</span>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-stats" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2.5rem;">
+    <div class="glass-card" style="padding: 1.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.25rem;">
+            <div style="width:52px; height:52px; border-radius:16px; background:var(--primary-light); color:var(--primary-color); display:flex; align-items:center; justify-content:center; font-size:1.6rem;">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <div style="text-align: right;">
+                <div style="color: @(Model.MonthlyGrowth.GrowthPercentage >= 0 ? "#10B981" : "#EF4444"); font-weight: 900; font-size: 0.9rem;">
+                    @(Model.MonthlyGrowth.GrowthPercentage >= 0 ? "+" : "")@Model.MonthlyGrowth.GrowthPercentage%
+                </div>
+                <div style="font-size: 0.65rem; color: #9CA3AF; font-weight: 700; text-transform: uppercase;">vs last month</div>
+            </div>
+        </div>
+        <div style="color: #6B7280; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem;">Total Revenue</div>
+        <div style="font-size: 1.8rem; font-weight: 900; color: #1F2937;">₱@Model.MonthlyGrowth.CurrentRevenue.ToString("N2")</div>
+    </div>
+
+    <div class="glass-card" style="padding: 1.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.25rem;">
+            <div style="width:52px; height:52px; border-radius:16px; background:#FEF3C7; color:#F59E0B; display:flex; align-items:center; justify-content:center; font-size:1.6rem;">
+                <i class="fas fa-utensils"></i>
+            </div>
+            <div style="width: 40px; height: 8px; background: #F3F4F6; border-radius: 10px; overflow: hidden;">
+                <div style="width: 75%; height: 100%; background: #F59E0B;"></div>
+            </div>
+        </div>
+        <div style="color: #6B7280; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem;">Total Orders</div>
+        <div style="font-size: 1.8rem; font-weight: 900; color: #1F2937;">@Model.DailyTrends.Sum(t => t.OrderCount)</div>
+    </div>
+
+    <div class="glass-card" style="padding: 1.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.25rem;">
+            <div style="width:52px; height:52px; border-radius:16px; background:#DCFCE7; color:#10B981; display:flex; align-items:center; justify-content:center; font-size:1.6rem;">
+                <i class="fas fa-chart-pie"></i>
+            </div>
+            <span style="background: rgba(16, 185, 129, 0.1); color: #10B981; padding: 0.35rem 0.65rem; border-radius: 8px; font-weight: 800; font-size: 0.65rem;">PEAK SEASON</span>
+        </div>
+        <div style="color: #6B7280; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem;">Active Categories</div>
+        <div style="font-size: 1.8rem; font-weight: 900; color: #1F2937;">@Model.CategoryData.Count</div>
+    </div>
+
+    <div class="glass-card" style="padding: 1.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.25rem;">
+            <div style="width:52px; height:52px; border-radius:16px; background:#E0F2FE; color:#0EA5E9; display:flex; align-items:center; justify-content:center; font-size:1.6rem;">
+                <i class="fas fa-microchip"></i>
+            </div>
+            <div class="pulse" style="width: 12px; height: 12px; background: #0EA5E9; border-radius: 50%;"></div>
+        </div>
+        <div style="color: #6B7280; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem;">AI Forecast</div>
+        <div style="font-size: 1.8rem; font-weight: 900; color: #0EA5E9;">+₱8,420.00</div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-bottom: 2.5rem;">
+    <!-- Revenue Overview -->
+    <div class="glass-card" style="height: 480px; display: flex; flex-direction: column;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2rem;">
+            <div>
+                <h3 style="font-size: 1.25rem; font-weight: 900; color: #1F2937; margin-bottom: 0.25rem;">Revenue Performance</h3>
+                <p style="color: #9CA3AF; font-size: 0.8rem; font-weight: 600;">Financial trends & cashflow analysis</p>
+            </div>
+            <div style="display:flex; gap: 0.5rem; align-items: center;">
+                <a href="?period=7" class="period-btn @(currentPeriod == "7" ? "active" : "")">Weekly</a>
+                <a href="?period=30" class="period-btn @(currentPeriod == "30" ? "active" : "")">Monthly</a>
+                <div style="width: 1px; height: 24px; background: #E5E7EB; margin: 0 0.5rem;"></div>
+                <input type="date" value="@DateTime.Now.ToString("yyyy-MM-dd")" style="padding: 0.5rem 0.75rem; border-radius: 10px; border: 1px solid #E5E7EB; font-size: 0.8rem; font-weight: 700; color: #4B5563; outline: none; cursor: pointer;" />
+            </div>
+        </div>
+        <div style="flex: 1; min-height: 0;">
+            <canvas id="salesChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Category Distribution -->
+    <div class="glass-card" style="height: 480px; display: flex; flex-direction: column;">
+        <h3 style="font-size: 1.25rem; font-weight: 900; color: #1F2937; margin-bottom: 0.5rem;">Market Share</h3>
+        <p style="color: #9CA3AF; font-size: 0.8rem; font-weight: 600; margin-bottom: 2rem;">Revenue by category</p>
+        <div style="flex: 1; display: flex; align-items: center; justify-content: center; position: relative;">
+            <canvas id="categoryChart"></canvas>
+            <div style="position: absolute; text-align: center; pointer-events: none;">
+                <div style="font-size: 0.7rem; font-weight: 800; color: #9CA3AF; text-transform: uppercase;">Total</div>
+                <div style="font-size: 1.25rem; font-weight: 900; color: #1F2937;">100%</div>
+            </div>
+        </div>
+        <div id="categoryLegend" style="margin-top: 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+            <!-- Legend items will be injected by JS -->
+        </div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 2.5rem;">
+    <!-- Top Selling Dishes -->
+    <div class="glass-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2rem;">
+            <div>
+                <h3 style="font-size: 1.25rem; font-weight: 900; color: #1F2937; margin-bottom: 0.25rem;">Best Selling Signatures</h3>
+                <p style="color: #9CA3AF; font-size: 0.8rem; font-weight: 600;">Dishes that drive your business</p>
+            </div>
+            <div style="width: 40px; height: 40px; border-radius: 12px; background: #FFF7ED; color: #F97316; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-award"></i>
+            </div>
+        </div>
+
+        @{ int rank = 0; }
+        @foreach (var item in Model.TopProducts)
+        {
+            rank++;
+            <div class="top-dish-card">
+                <div style="display:flex; align-items:center; gap: 1.5rem; flex: 1;">
+                    <div style="position: relative;">
+                        <div style="width:60px; height:60px; border-radius:16px; background:#F3F4F6; overflow:hidden; border: 2px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                            @if (!string.IsNullOrEmpty(item.ImageUrl))
+                            {
+                                <img src="@item.ImageUrl" style="width:100%; height:100%; object-fit:cover;" />
+                            }
+                            else
+                            {
+                                <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color: var(--primary-color); font-weight: 900;">@item.ProductName[0]</div>
+                            }
+                        </div>
+                        @if (rank <= 3)
+                        {
+                            <div style="position: absolute; top: -10px; right: -10px;">
+                                <i class="fas fa-fire flame-@rank"></i>
+                            </div>
+                        }
+                    </div>
+                    <div>
+                        <div style="font-weight: 900; color: #1F2937; font-size: 1rem;">@item.ProductName</div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.25rem;">
+                            <span style="padding: 0.2rem 0.5rem; background: @(rank == 1 ? "rgba(45, 159, 150, 0.1)" : "#F3F4F6"); color: @(rank == 1 ? "var(--primary-color)" : "#9CA3AF"); border-radius: 6px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase;">@item.Category</span>
+                            <span style="font-size: 0.8rem; color: #9CA3AF; font-weight: 600;">@item.QuantitySold Sold</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-weight: 900; color: #1F2937; font-size: 1.1rem;">₱@item.TotalRevenue.ToString("N2")</div>
+                    <div style="font-size: 0.75rem; color: @(item.GrowthPercentage >= 0 ? "#10B981" : "#EF4444"); font-weight: 800; margin-top: 0.25rem;">
+                        @(item.GrowthPercentage >= 0 ? "+" : "")@item.GrowthPercentage%
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- AI Intelligence -->
+    <div class="glass-card" style="background: #111827; border: none; color: white; display: flex; flex-direction: column;">
+        <div style="display:flex; align-items:center; gap: 1.25rem; margin-bottom: 2.5rem;">
+            <div style="width:56px; height:56px; border-radius:18px; background:rgba(45, 159, 150, 0.2); color:var(--primary-color); display:flex; align-items:center; justify-content:center; font-size:1.75rem;">
+                <i class="fas fa-magic"></i>
+            </div>
+            <div>
+                <h3 style="font-size: 1.35rem; font-weight: 900; color: white; margin-bottom: 0.1rem;">Python AI Insights</h3>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div style="width: 8px; height: 8px; background: #10B981; border-radius: 50%; box-shadow: 0 0 8px #10B981;"></div>
+                    <span style="font-size: 0.7rem; color: #9CA3AF; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">AI Model v2.4 Active</span>
+                </div>
+            </div>
+        </div>
+        
+        <div style="background: rgba(255,255,255,0.04); padding: 2rem; border-radius: 24px; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 2rem; flex: 1; display: flex; flex-direction: column; justify-content: center;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <p style="color: var(--primary-color); margin: 0; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;">Business Intelligence Output</p>
+                <div style="font-size: 0.65rem; color: #9CA3AF; background: rgba(255,255,255,0.05); padding: 0.25rem 0.75rem; border-radius: 100px; border: 1px solid rgba(255,255,255,0.1);">
+                    SYNC: @Model.LastAISync
+                </div>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                @foreach (var insight in Model.AIInsights)
+                {
+                    <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                        <i class="fas fa-lightbulb" style="color: #F59E0B; margin-top: 0.25rem;"></i>
+                        <p style="color: #D1D5DB; line-height: 1.6; font-size: 0.95rem; font-weight: 500; margin: 0;">
+                            @Html.Raw(insight)
+                        </p>
+                    </div>
+                }
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 1rem;">
+            <a href="@Url.Action("DetailedReport", "Admin")" class="btn-checkout" style="flex: 1; border-radius: 16px; height: 56px; margin-top: 0; background: var(--primary-color); border: none; font-weight: 900; font-size: 0.95rem; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 0.5rem; color: white;">
+                <i class="fas fa-microscope"></i> Detailed Report
+            </a>
+            <button style="width: 56px; height: 56px; border-radius: 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // ── Revenue Chart with AI Forecast ──
+        const ctx = document.getElementById('salesChart').getContext('2d');
+        
+        // Data Preparation
+        const historicalData = @Html.Raw(Json.Serialize(Model.DailyTrends.Select(t => t.Revenue)));
+        const historicalLabels = @Html.Raw(Json.Serialize(Model.DailyTrends.Select(t => t.TimeLabel)));
+        
+        const forecastData = @Html.Raw(Json.Serialize(Model.ForecastTrends.Select(t => t.Revenue)));
+        const forecastLabels = @Html.Raw(Json.Serialize(Model.ForecastTrends.Select(t => t.TimeLabel)));
+
+        // Combine labels
+        const allLabels = [...historicalLabels, ...forecastLabels];
+        
+        // Prepare Forecast Dataset (start from last historical point to connect)
+        const forecastDataset = new Array(historicalData.length - 1).fill(null);
+        forecastDataset.push(historicalData[historicalData.length - 1]);
+        forecastDataset.push(...forecastData);
+
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(45, 159, 150, 0.4)');
+        gradient.addColorStop(1, 'rgba(45, 159, 150, 0)');
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: allLabels,
+                datasets: [
+                    {
+                        label: 'Actual Revenue',
+                        data: historicalData,
+                        borderColor: '#2D9F96',
+                        backgroundColor: gradient,
+                        fill: true,
+                        tension: 0.45,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#2D9F96',
+                        pointBorderColor: 'white',
+                        pointBorderWidth: 3,
+                        borderWidth: 4,
+                        z: 10
+                    },
+                    {
+                        label: 'AI Forecast',
+                        data: forecastDataset,
+                        borderColor: '#9CA3AF',
+                        borderDash: [5, 5],
+                        backgroundColor: 'transparent',
+                        fill: false,
+                        tension: 0.45,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#9CA3AF',
+                        pointBorderColor: 'white',
+                        pointBorderWidth: 2,
+                        borderWidth: 3,
+                        z: 5
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { 
+                        display: true, 
+                        position: 'top', 
+                        align: 'end',
+                        labels: { usePointStyle: true, boxWidth: 6, font: { weight: '800', size: 10 } } 
+                    } 
+                },
+                scales: {
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { color: '#F3F4F6', drawBorder: false },
+                        ticks: { font: { weight: '600' }, color: '#9CA3AF', padding: 10 }
+                    },
+                    x: { 
+                        grid: { display: false },
+                        ticks: { font: { weight: '600' }, color: '#9CA3AF', padding: 10 }
+                    }
+                },
+                interaction: { intersect: false, mode: 'index' }
+            }
+        });
+
+        // ── Category Chart ──
+        const catCtx = document.getElementById('categoryChart').getContext('2d');
+        const catLabels = @Html.Raw(Json.Serialize(Model.CategoryData.Select(c => c.CategoryName)));
+        const catValues = @Html.Raw(Json.Serialize(Model.CategoryData.Select(c => c.Revenue)));
+        const palette = ['#2D9F96', '#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981'];
+
+        new Chart(catCtx, {
+            type: 'doughnut',
+            data: {
+                labels: catLabels,
+                datasets: [{
+                    data: catValues,
+                    backgroundColor: palette,
+                    borderWidth: 8,
+                    borderColor: 'white',
+                    hoverOffset: 20
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '80%',
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+
+        // Inject Custom Legend
+        const legendContainer = document.getElementById('categoryLegend');
+        catLabels.forEach((label, i) => {
+            const item = document.createElement('div');
+            item.style.display = 'flex';
+            item.style.alignItems = 'center';
+            item.style.gap = '0.5rem';
+            item.innerHTML = `
+                <div style="width:10px; height:10px; border-radius:50%; background:${palette[i % palette.length]}"></div>
+                <span style="font-size:0.75rem; font-weight:800; color:#4B5563;">${label}</span>
+            `;
+            legendContainer.appendChild(item);
+        });
+    </script>
+}

@@ -1,0 +1,335 @@
+@model IEnumerable<FoodOrderingSytemAIAnalytics.Models.ViewModels.ProductDisplayViewModel>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Manage Dishes";
+    string selectedCategory = ViewBag.SelectedCategory ?? "All";
+}
+
+<div class="section-bar" style="margin-bottom: 2rem;">
+    <div>
+        <h2 style="font-size: 1.75rem; font-weight: 900; color: #1F2937; margin-bottom: 0.25rem;">Manage Menu</h2>
+        <span class="count">Configure dishes and pricing</span>
+    </div>
+    <div style="display:flex; gap: 1rem;">
+        <a href="@Url.Action("Create", "Product")" class="add-btn" style="width: auto; padding: 0 1.25rem; height: 44px; border-radius: 12px; font-size: 0.85rem; text-decoration: none;">
+            <i class="fas fa-plus"></i> Add New Dish
+        </a>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div style="background: rgba(16, 185, 129, 0.1); color: #10B981; padding: 1rem 1.5rem; border-radius: 14px; font-weight: 700; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem; border: 1px solid rgba(16, 185, 129, 0.2);">
+        <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div style="background: rgba(239, 68, 68, 0.1); color: #EF4444; padding: 1rem 1.5rem; border-radius: 14px; font-weight: 700; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem; border: 1px solid rgba(239, 68, 68, 0.2);">
+        <i class="fas fa-exclamation-circle"></i> @TempData["ErrorMessage"]
+    </div>
+}
+
+<div class="dishes-layout">
+    <!-- Categories Sidebar -->
+    <div class="category-card" style="padding: 1.75rem; border-radius: 24px;">
+        <h2 style="font-size: 1.1rem; font-weight: 900; color: #1F2937; margin-bottom: 1.5rem; padding-left: 0.5rem;">Categories</h2>
+        <div class="category-list">
+            <a href="@Url.Action("Products", "Admin")" class="category-item @(selectedCategory == "All" ? "active" : "")" style="border-radius: 12px; padding: 0.85rem 1rem;">
+                <div style="display:flex; align-items:center; gap: 0.85rem;">
+                    <i class="fas fa-th-large" style="font-size: 1.1rem;"></i>
+                    <span style="font-weight: 700; font-size: 0.9rem;">All Dishes</span>
+                </div>
+            </a>
+            
+            @foreach (var cat in (IEnumerable<FoodOrderingSytemAIAnalytics.Models.Category>)ViewBag.Categories)
+            {
+                <a href="@Url.Action("Products", "Admin", new { category = cat.Name })" class="category-item @(selectedCategory == cat.Name ? "active" : "")" style="border-radius: 12px; padding: 0.85rem 1rem;">
+                    <div style="display:flex; align-items:center; gap: 0.85rem;">
+                        <i class="@cat.Icon" style="font-size: 1.1rem;"></i>
+                        <span style="font-weight: 700; font-size: 0.9rem;">@cat.Name</span>
+                    </div>
+                </a>
+            }
+        </div>
+
+        <button onclick="openCategoryModal()" class="btn-teal" style="width: 100%; justify-content: center; margin-top: 1.5rem; height: 44px; border-radius: 12px; background: var(--primary-light); color: var(--primary-color); font-weight: 800; font-size: 0.85rem; border: none; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fas fa-plus"></i> Add Category
+        </button>
+    </div>
+
+    <!-- Products Grid -->
+    <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 700;">@selectedCategory (@Model.Count())</h2>
+            <div style="display:flex; gap: 0.75rem;">
+                <div id="gridViewBtn" onclick="toggleView('grid')" style="padding: 0.5rem; background: var(--primary-color); border: 1px solid var(--primary-color); border-radius: 8px; color: white; cursor: pointer;">
+                    <i class="fas fa-th-large"></i>
+                </div>
+                <div id="listViewBtn" onclick="toggleView('list')" style="padding: 0.5rem; background: white; border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-muted); cursor: pointer;">
+                    <i class="fas fa-list"></i>
+                </div>
+            </div>
+        </div>
+
+        <div id="dishesContainer" class="dish-grid">
+            <!-- Add New Card -->
+            <a href="javascript:void(0)" onclick="openModal('@Url.Action("Create", "Product")')" class="dish-card add-new-card" style="border-radius: 20px; min-height: 280px; border: 2px dashed #D1D5DB; background: #F9FAFB; text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <div class="add-icon" style="background: var(--primary-color); width: 50px; height: 50px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                    <i class="fas fa-plus"></i>
+                </div>
+                <div style="font-weight: 800; color: #4B5563; font-size: 0.9rem; text-align: center; margin-top: 1rem;">Add New Dish to<br>@selectedCategory</div>
+            </a>
+
+            @foreach (var dish in Model)
+            {
+                <div class="dish-card" style="border-radius: 20px; padding: 1.25rem; min-height: 280px; display: flex; flex-direction: column; align-items: center; justify-content: space-between;">
+                    <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                         <input type="checkbox" style="width:18px; height:18px; border-radius: 6px; cursor: pointer;">
+                         <div style="color: #9CA3AF; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">@dish.Category</div>
+                    </div>
+                    
+                    <div class="dish-image-wrapper" style="width: 100px; height: 100px; margin-bottom: 1rem;">
+                        @if (!string.IsNullOrEmpty(dish.ImageUrl))
+                        {
+                            <img src="@dish.ImageUrl" class="dish-image" style="border-radius:18px; width: 100%; height: 100%; object-fit: cover;">
+                        }
+                        else
+                        {
+                            <div class="dish-image" style="background: var(--primary-light); color: var(--primary-color); border-radius: 18px; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem;">
+                                @(dish.Category == "Burger" ? "🍔" :
+                                  dish.Category == "Pizza"  ? "🍕" :
+                                  dish.Category == "Ice Cream" ? "🍦" :
+                                  dish.Category == "Juice"  ? "🍹" : "🍽️")
+                            </div>
+                        }
+                    </div>
+
+                    <div style="text-align: center; width: 100%;">
+                        <div class="dish-name" style="font-weight: 800; font-size: 1rem; color: #1F2937; margin-bottom: 0.25rem;">@dish.Name</div>
+                        <div class="dish-price" style="font-weight: 900; color: var(--primary-color); font-size: 1.15rem;">₱@dish.FinalPrice.ToString("N2")</div>
+                    </div>
+
+                    <div style="margin-top: 1.25rem; display:flex; gap:0.5rem; width: 100%;">
+                        <button onclick="openModal('@Url.Action("Edit", "Product", new { id = dish.Id })')" class="btn-checkout" style="flex: 1; padding: 0; height: 38px; margin-top: 0; font-size: 0.8rem; border-radius: 10px; background: #F3F4F6; color: #4B5563; box-shadow: none;">Edit</button>
+                        <form asp-controller="Product" asp-action="Delete" method="post" onsubmit="return confirmDelete('@dish.Name', event)" style="flex: 1;">
+                            <input type="hidden" name="id" value="@dish.Id" />
+                            <input type="hidden" name="confirmName" id="confirmName_@dish.Id" />
+                            <button type="submit" class="btn-checkout" style="width: 100%; padding: 0; height: 38px; margin-top: 0; font-size: 0.8rem; border-radius: 10px; background: rgba(239, 68, 68, 0.1); color: #EF4444; box-shadow: none;">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Category Modal -->
+<div id="categoryModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2100; align-items:center; justify-content:center; backdrop-filter: blur(4px);">
+    <div style="background:white; padding: 2rem; border-radius:28px; max-width:450px; width:90%; box-shadow: 0 30px 60px -12px rgba(0,0,0,0.3);">
+        <div style="margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 900; color: #1F2937; margin-bottom: 0.5rem;">New Category</h2>
+            <p style="color: #9CA3AF; font-weight: 700; font-size: 0.8rem; text-transform: uppercase;">Define a new menu group</p>
+        </div>
+        
+        <form asp-controller="Admin" asp-action="CreateCategory" method="post">
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-weight: 800; color: #4B5563; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.5rem;">Category Name</label>
+                <input name="Name" required class="form-control" placeholder="e.g. Seafood" style="height: 48px; border-radius: 12px; border: 1.5px solid #E5E7EB; padding: 0 1rem; width: 100%;" />
+            </div>
+            
+            <div style="margin-bottom: 2rem;">
+                <label style="display: block; font-weight: 800; color: #4B5563; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.5rem;">Select Icon</label>
+                <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem;">
+                    <div onclick="selectIcon(this, 'fas fa-fish')" class="icon-opt" style="aspect-ratio: 1; border: 1.5px solid #E5E7EB; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #9CA3AF; font-size: 1.25rem;"><i class="fas fa-fish"></i></div>
+                    <div onclick="selectIcon(this, 'fas fa-hotdog')" class="icon-opt" style="aspect-ratio: 1; border: 1.5px solid #E5E7EB; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #9CA3AF; font-size: 1.25rem;"><i class="fas fa-hotdog"></i></div>
+                    <div onclick="selectIcon(this, 'fas fa-coffee')" class="icon-opt" style="aspect-ratio: 1; border: 1.5px solid #E5E7EB; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #9CA3AF; font-size: 1.25rem;"><i class="fas fa-coffee"></i></div>
+                    <div onclick="selectIcon(this, 'fas fa-carrot')" class="icon-opt" style="aspect-ratio: 1; border: 1.5px solid #E5E7EB; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #9CA3AF; font-size: 1.25rem;"><i class="fas fa-carrot"></i></div>
+                    <div onclick="selectIcon(this, 'fas fa-apple-alt')" class="icon-opt" style="aspect-ratio: 1; border: 1.5px solid #E5E7EB; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #9CA3AF; font-size: 1.25rem;"><i class="fas fa-apple-alt"></i></div>
+                    <div onclick="selectIcon(this, 'fas fa-bacon')" class="icon-opt" style="aspect-ratio: 1; border: 1.5px solid #E5E7EB; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #9CA3AF; font-size: 1.25rem;"><i class="fas fa-bacon"></i></div>
+                    <div onclick="selectIcon(this, 'fas fa-egg')" class="icon-opt" style="aspect-ratio: 1; border: 1.5px solid #E5E7EB; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #9CA3AF; font-size: 1.25rem;"><i class="fas fa-egg"></i></div>
+                    <div onclick="selectIcon(this, 'fas fa-bread-slice')" class="icon-opt" style="aspect-ratio: 1; border: 1.5px solid #E5E7EB; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #9CA3AF; font-size: 1.25rem;"><i class="fas fa-bread-slice"></i></div>
+                    <div onclick="selectIcon(this, 'fas fa-cookie')" class="icon-opt" style="aspect-ratio: 1; border: 1.5px solid #E5E7EB; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #9CA3AF; font-size: 1.25rem;"><i class="fas fa-cookie"></i></div>
+                    <div onclick="selectIcon(this, 'fas fa-wine-glass')" class="icon-opt" style="aspect-ratio: 1; border: 1.5px solid #E5E7EB; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #9CA3AF; font-size: 1.25rem;"><i class="fas fa-wine-glass"></i></div>
+                </div>
+                <input type="hidden" name="Icon" id="selectedIconInput" value="fas fa-utensils" />
+            </div>
+            
+            <div style="display: flex; gap: 0.75rem;">
+                <button type="submit" class="btn-checkout" style="flex: 1; height: 52px; border-radius: 14px; font-weight: 900;">Create Category</button>
+                <button type="button" onclick="document.getElementById('categoryModal').style.display='none'" class="btn-checkout" style="width: 100px; height: 52px; border-radius: 14px; font-weight: 900; background: #F3F4F6; color: #4B5563; box-shadow: none;">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="productModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; align-items:center; justify-content:center; backdrop-filter: blur(4px);">
+    <div id="modalContent" style="background:white; padding: 0; border-radius:28px; max-width:600px; width:90%; max-height: 95vh; overflow: hidden; box-shadow: 0 30px 60px -12px rgba(0,0,0,0.3); display: flex; flex-direction: column;">
+        <!-- Content loaded via AJAX -->
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openModal(url) {
+            fetch(url, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.text())
+            .then(html => {
+                document.getElementById('modalContent').innerHTML = html;
+                document.getElementById('productModal').style.display = 'flex';
+            });
+        }
+
+        function updateFileName(input) {
+            const display = document.getElementById('fileNameDisplay');
+            if (input.files && input.files[0]) {
+                display.textContent = 'Selected: ' + input.files[0].name;
+                display.style.display = 'block';
+                
+                // If there's a preview img in the modal, update it
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('imagePreview');
+                    if (preview) {
+                        preview.src = e.target.result;
+                    } else {
+                        // If it was a placeholder icon
+                        const placeholder = document.getElementById('imagePlaceholder');
+                        if (placeholder) {
+                            const img = document.createElement('img');
+                            img.id = 'imagePreview';
+                            img.style.width = '100%';
+                            img.style.height = '100%';
+                            img.style.objectFit = 'cover';
+                            img.src = e.target.result;
+                            placeholder.parentNode.replaceChild(img, placeholder);
+                        }
+                    }
+                }
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                display.style.display = 'none';
+            }
+        }
+
+        function openCategoryModal() {
+            document.getElementById('categoryModal').style.display = 'flex';
+        }
+
+        function selectIcon(el, iconClass) {
+            document.querySelectorAll('.icon-opt').forEach(opt => {
+                opt.style.borderColor = '#E5E7EB';
+                opt.style.color = '#9CA3AF';
+                opt.style.background = 'white';
+            });
+            el.style.borderColor = 'var(--primary-color)';
+            el.style.color = 'var(--primary-color)';
+            el.style.background = 'var(--primary-light)';
+            document.getElementById('selectedIconInput').value = iconClass;
+        }
+
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('productModal')) {
+                document.getElementById('productModal').style.display = 'none';
+            }
+            if (event.target == document.getElementById('categoryModal')) {
+                document.getElementById('categoryModal').style.display = 'none';
+            }
+        }
+
+        function confirmDelete(name, event) {
+            const input = prompt(`To delete "${name}", please type the product name exactly:`);
+            if (input === name) {
+                const form = event.target.closest('form');
+                form.querySelector('input[name="confirmName"]').value = input;
+                return true;
+            }
+            alert("Name did not match. Deletion cancelled.");
+            return false;
+        }
+
+        document.getElementById('searchInput')?.addEventListener('keyup', function() {
+            var val = this.value.toLowerCase();
+            document.querySelectorAll('.dish-grid .dish-card:not(.add-new-card)').forEach(function(card) {
+                var name = card.querySelector('.dish-name').textContent.toLowerCase();
+                card.style.display = name.includes(val) ? 'block' : 'none';
+            });
+        });
+        function toggleView(view) {
+            const container = document.getElementById('dishesContainer');
+            const gridBtn = document.getElementById('gridViewBtn');
+            const listBtn = document.getElementById('listViewBtn');
+
+            if (view === 'list') {
+                container.classList.add('list-view');
+                listBtn.style.background = 'var(--primary-color)';
+                listBtn.style.color = 'white';
+                listBtn.style.borderColor = 'var(--primary-color)';
+                gridBtn.style.background = 'white';
+                gridBtn.style.color = 'var(--text-muted)';
+                gridBtn.style.borderColor = 'var(--border-color)';
+            } else {
+                container.classList.remove('list-view');
+                gridBtn.style.background = 'var(--primary-color)';
+                gridBtn.style.color = 'white';
+                gridBtn.style.borderColor = 'var(--primary-color)';
+                listBtn.style.background = 'white';
+                listBtn.style.color = 'var(--text-muted)';
+                listBtn.style.borderColor = 'var(--border-color)';
+            }
+        }
+    </script>
+    
+    <style>
+        /* List View Styles */
+        .dish-grid.list-view {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .dish-grid.list-view .dish-card {
+            flex-direction: row !important;
+            min-height: auto !important;
+            height: 100px;
+            padding: 1rem 2rem !important;
+            align-items: center !important;
+        }
+        
+        .dish-grid.list-view .dish-card.add-new-card {
+            height: 80px;
+            border-style: solid;
+        }
+        
+        .dish-grid.list-view .dish-image-wrapper {
+            width: 60px !important;
+            height: 60px !important;
+            margin-bottom: 0 !important;
+            margin-right: 1.5rem;
+        }
+        
+        .dish-grid.list-view .dish-name {
+            text-align: left !important;
+            flex: 1;
+        }
+        
+        .dish-grid.list-view .dish-price {
+            margin-right: 2rem;
+        }
+        
+        .dish-grid.list-view .dish-card > div:first-child {
+            width: auto !important;
+            margin-bottom: 0 !important;
+            margin-right: 1rem;
+        }
+        
+        .dish-grid.list-view .dish-card > div:last-child {
+            width: auto !important;
+            margin-top: 0 !important;
+        }
+    </style>
+}
+

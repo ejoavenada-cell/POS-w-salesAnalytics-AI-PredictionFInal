@@ -1,0 +1,113 @@
+@model FoodOrderingSytemAIAnalytics.Models.StoreSetting
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Store Settings";
+}
+
+<div class="section-bar" style="margin-bottom: 2rem;">
+    <div>
+        <h2 style="font-size: 1.75rem; font-weight: 900; color: #1F2937; margin-bottom: 0.25rem;">General Settings</h2>
+        <span class="count">Customize your store branding and regional settings</span>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div style="background: #D1FAE5; color: #065F46; padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; font-weight: 700; border-left: 5px solid #10B981;">
+        <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+    </div>
+}
+
+<div style="display: grid; grid-template-columns: 1fr 350px; gap: 2rem;">
+    <div class="category-card" style="padding: 2rem; border-radius: 28px;">
+        <form asp-action="Update" method="post" enctype="multipart/form-data">
+            <div style="margin-bottom: 2rem;">
+                <label asp-for="StoreName" style="display: block; font-weight: 800; color: #4B5563; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.5rem;">Store Name</label>
+                <input asp-for="StoreName" class="form-control" style="height: 52px; border-radius: 14px; border: 1.5px solid #E5E7EB; padding: 0 1.25rem; width: 100%; font-size: 1rem; font-weight: 700;" />
+            </div>
+
+            <div style="margin-bottom: 2rem;">
+                <label style="display: block; font-weight: 800; color: #4B5563; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.5rem;">Currency Symbol</label>
+                <div style="display: flex; gap: 0.75rem;">
+                    <div style="flex: 1; position: relative;">
+                        <input asp-for="CurrencySymbol" class="form-control" style="height: 52px; border-radius: 14px; border: 1.5px solid #E5E7EB; padding: 0 1.25rem; width: 100%; font-size: 1rem; font-weight: 700;" />
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 2rem;">
+                <label style="display: block; font-weight: 800; color: #4B5563; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 1rem;">Logo Branding</label>
+                <div style="display: flex; gap: 2rem; align-items: flex-start;">
+                    <div style="width: 120px; height: 120px; border-radius: 20px; background: #F3F4F6; border: 2px dashed #D1D5DB; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;">
+                        @if (!string.IsNullOrEmpty(Model.LogoUrl))
+                        {
+                            <img src="@Model.LogoUrl" style="width: 100%; height: 100%; object-fit: contain;" id="logoPreview" />
+                        }
+                        else
+                        {
+                            <i class="fas fa-image" style="font-size: 2.5rem; color: #D1D5DB;" id="logoPlaceholder"></i>
+                        }
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="border: 2px dashed var(--primary-color); background: var(--pos-primary-light); border-radius: 16px; padding: 1.5rem; text-align: center; cursor: pointer;" onclick="document.getElementById('LogoFile').click()">
+                            <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: var(--primary-color); margin-bottom: 0.5rem;"></i>
+                            <p style="font-weight: 800; color: var(--primary-color); font-size: 0.9rem; margin-bottom: 0.25rem;">Upload New Logo</p>
+                            <p style="font-size: 0.75rem; color: #6B7280; font-weight: 600;">PNG or SVG recommended (Max 2MB)</p>
+                            <input asp-for="LogoFile" type="file" style="display: none;" onchange="previewLogo(this)" />
+                        </div>
+                        <div id="logoFileName" style="margin-top: 0.75rem; font-weight: 800; color: var(--primary-color); font-size: 0.75rem; display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="padding-top: 1rem; border-top: 1px solid #F3F4F6;">
+                <button type="submit" class="btn-checkout" style="max-width: 250px;">
+                    <i class="fas fa-save"></i> Save Configuration
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div>
+        <div class="category-card" style="padding: 1.5rem; border-radius: 24px; background: #1F2937; color: white;">
+            <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 1rem;">Branding Tips</h3>
+            <ul style="padding-left: 1.25rem; font-size: 0.85rem; color: #9CA3AF; display: flex; flex-direction: column; gap: 0.75rem;">
+                <li>Use a high-resolution logo with a transparent background.</li>
+                <li>Your logo will appear in the sidebar and on the login page.</li>
+                <li>The Store Name affects the browser title and system reports.</li>
+                <li>Currency symbol affects all price displays across the app.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function previewLogo(input) {
+            const fileName = document.getElementById('logoFileName');
+            if (input.files && input.files[0]) {
+                fileName.textContent = "Selected: " + input.files[0].name;
+                fileName.style.display = 'block';
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('logoPreview');
+                    const placeholder = document.getElementById('logoPlaceholder');
+                    if (preview) {
+                        preview.src = e.target.result;
+                    } else if (placeholder) {
+                        const img = document.createElement('img');
+                        img.id = 'logoPreview';
+                        img.src = e.target.result;
+                        img.style.width = '100%';
+                        img.style.height = '100%';
+                        img.style.objectFit = 'contain';
+                        placeholder.parentNode.appendChild(img);
+                        placeholder.remove();
+                    }
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
+}

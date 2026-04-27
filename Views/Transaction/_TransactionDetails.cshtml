@@ -1,0 +1,55 @@
+@model FoodOrderingSytemAIAnalytics.Models.Transaction
+
+<div style="padding: 2.5rem;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <div style="width: 64px; height: 64px; background: var(--primary-color); color: white; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 900; margin: 0 auto 1rem;">TS</div>
+        <h2 style="font-size: 1.5rem; font-weight: 900; color: #1F2937; margin-bottom: 0.25rem;">Transaction Details</h2>
+        <p style="color: #9CA3AF; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">Code: @Model.TransactionCode</p>
+    </div>
+
+    <div style="background: #F9FAFB; border-radius: 20px; padding: 1.5rem; margin-bottom: 2rem; border: 1px solid #F3F4F6;">
+        <div style="display:flex; justify-content:space-between; margin-bottom: 0.75rem;">
+            <span style="color: #9CA3AF; font-weight: 700; font-size: 0.8rem; text-transform: uppercase;">Date & Time</span>
+            <span style="color: #1F2937; font-weight: 800; font-size: 0.85rem;">@Model.Date.ToString("MMM dd, yyyy • HH:mm")</span>
+        </div>
+        <div style="display:flex; justify-content:space-between;">
+            <span style="color: #9CA3AF; font-weight: 700; font-size: 0.8rem; text-transform: uppercase;">Served By</span>
+            <span style="color: #1F2937; font-weight: 800; font-size: 0.85rem;">@Model.User.Name</span>
+        </div>
+    </div>
+
+    <div style="margin-bottom: 2rem;">
+        <p style="color: #9CA3AF; font-weight: 800; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1.25rem; border-bottom: 1px solid #F3F4F6; padding-bottom: 0.75rem;">Items Purchased</p>
+        <div style="max-height: 200px; overflow-y: auto; padding-right: 0.5rem;">
+            @foreach (var item in Model.TransactionDetails)
+            {
+                <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom: 1rem;">
+                    <div>
+                        <div style="font-weight: 800; color: #1F2937; font-size: 0.95rem;">@item.Product.Name</div>
+                        <div style="font-size: 0.8rem; color: #9CA3AF; font-weight: 700;">@item.Quantity x ₱@item.Price.ToString("N2")</div>
+                    </div>
+                    <div style="font-weight: 900; color: #1F2937;">₱@item.Subtotal.ToString("N2")</div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div style="border-top: 2px dashed #E5E7EB; padding-top: 1.5rem; margin-top: 1.5rem;">
+        <div style="display:flex; justify-content:space-between; margin-bottom: 0.75rem;">
+            <span style="color: #6B7280; font-weight: 700;">Subtotal</span>
+            <span style="color: #1F2937; font-weight: 800;">₱@((Model.TotalAmount / 1.12m).ToString("N2"))</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom: 1.25rem;">
+            <span style="color: #6B7280; font-weight: 700;">VAT (12%)</span>
+            <span style="color: #1F2937; font-weight: 800;">₱@((Model.TotalAmount - (Model.TotalAmount / 1.12m)).ToString("N2"))</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size: 1.5rem; font-weight: 900; color: var(--primary-color); background: var(--primary-light); padding: 1.25rem; border-radius: 16px;">
+            <span>Total</span>
+            <span>₱@Model.TotalAmount.ToString("N2")</span>
+        </div>
+    </div>
+
+    <button onclick="document.getElementById('detailsModal').style.display='none'" class="btn-checkout" style="width: 100%; margin-top: 2.5rem; height: 52px; border-radius: 16px; font-weight: 900;">
+        Close Receipt
+    </button>
+</div>

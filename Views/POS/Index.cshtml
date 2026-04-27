@@ -1,0 +1,278 @@
+@model FoodOrderingSytemAIAnalytics.Models.ViewModels.POSTerminalViewModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "POS Terminal";
+}
+
+@section CategoryTabs {
+    <!-- Category Tabs -->
+    <div class="category-tabs">
+        <a href="@Url.Action("Index","POS")" class="cat-tab @(string.IsNullOrEmpty(Model.SelectedCategory)?"active":"")">
+            <i class="fas fa-th-large"></i> All
+        </a>
+        @foreach (var cat in Model.Categories)
+        {
+            <a href="@Url.Action("Index","POS",new{category=cat.Name})" class="cat-tab @(Model.SelectedCategory==cat.Name?"active":"")">
+                <i class="@cat.Icon"></i> @cat.Name
+            </a>
+        }
+    </div>
+}
+
+<!-- Section Title -->
+<div class="section-bar">
+    <h2>Choose Dishes</h2>
+    <span class="count">@Model.Products.Count() items</span>
+</div>
+
+<!-- Product Grid -->
+<div class="product-grid" id="productGrid">
+    @foreach (var p in Model.Products)
+    {
+        <div class="product-card" onclick="addToCart(@p.Id)">
+            @if (p.IsNew)
+            {
+                <span class="card-badge badge-new">NEW</span>
+            }
+            @if (p.IsTopSelling)
+            {
+                <div class="card-flame"><i class="fas fa-fire"></i></div>
+            }
+
+            <div class="product-thumb">
+                @if (!string.IsNullOrEmpty(p.ImageUrl))
+                {
+                    <img src="@p.ImageUrl" alt="@p.Name" />
+                }
+                else
+                {
+                    @(p.Category == "Burger" ? "🍔" :
+                        p.Category == "Pizza"  ? "🍕" :
+                        p.Category == "Ice Cream" ? "🍦" :
+                        p.Category == "Juice"  ? "🍹" : "🍽️")
+                }
+            </div>
+
+            <div class="product-name">@p.Name</div>
+            <div class="product-sub">@p.Category</div>
+
+            <div class="product-footer">
+                <div class="product-price">
+                    @if (p.HasDiscount)
+                    {
+                        <span class="old">₱@p.OriginalPrice.ToString("N2")</span>
+                    }
+                    ₱@p.FinalPrice.ToString("N2")
+                </div>
+                <button class="add-btn" type="button"><i class="fas fa-plus"></i></button>
+            </div>
+        </div>
+    }
+</div>
+
+@section RightSidebar {
+    <!-- ═══ Cart Sidebar ═══ -->
+    <aside class="pos-cart" id="cartContainer">
+        @await Html.PartialAsync("_CartPartial", Model.Cart)
+    </aside>
+}
+
+<!-- ═══ Success Overlay ═══ -->
+<div class="success-overlay" id="successOverlay">
+    <div class="success-card">
+        <div class="success-icon"><i class="fas fa-check"></i></div>
+        <h2 style="font-size:1.5rem; font-weight:900; margin-bottom:0.75rem;">Payment Successful!</h2>
+
+        <hr class="receipt-divider" />
+
+        <div id="receiptBody" style="text-align: center;"></div>
+
+        <hr class="receipt-divider" />
+        
+        <div style="font-size: 0.75rem; font-weight: 800; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem; text-align: left;">
+            Items Purchased
+        </div>
+        
+        <div id="receiptItems" style="max-height: 180px; overflow-y: auto; margin-bottom: 1rem; padding-right: 5px; text-align: left;">
+            <!-- Items will be injected here -->
+        </div>
+
+        <hr class="receipt-divider" />
+
+        <div class="receipt-row" style="font-size: 0.8rem; margin-bottom: 0.25rem;">
+            <span>Subtotal</span><span id="rSubtotal"></span>
+        </div>
+        <div class="receipt-row" style="font-size: 0.8rem; margin-bottom: 0.25rem;">
+            <span>VAT (12%)</span><span id="rTax"></span>
+        </div>
+        <div class="receipt-row total" style="margin-bottom:0.5rem;">
+            <span>Total</span><span id="rTotal"></span>
+        </div>
+        <div class="receipt-row">
+            <span>Cash Received</span><span id="rCash"></span>
+        </div>
+        <div class="receipt-row change">
+            <span>Change</span><span id="rChange"></span>
+        </div>
+
+        <button class="btn-checkout" style="margin-top:1.5rem;" onclick="closeSuccess()">
+            <i class="fas fa-arrow-right"></i> New Order
+        </button>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+// ── Add to Cart ──
+function addToCart(id) {
+    fetch('/POS/AddToCart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'productId=' + id + '&quantity=1'
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.success) refreshCart();
+        else alert(d.message);
+    });
+}
+
+// ── Refresh Cart ──
+function refreshCart() {
+    fetch('/POS/GetCart')
+        .then(r => r.text())
+        .then(html => { document.getElementById('cartContainer').innerHTML = html; });
+}
+
+// ── Update Quantity ──
+function updateQuantity(id, qty) {
+    fetch('/POS/UpdateQuantity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'productId=' + id + '&quantity=' + qty
+    })
+    .then(r => r.json())
+    .then(d => { if (d.success) refreshCart(); });
+}
+
+// ── Remove ──
+function removeFromCart(id) {
+    fetch('/POS/RemoveFromCart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'productId=' + id
+    })
+    .then(r => r.json())
+    .then(d => { if (d.success) refreshCart(); });
+}
+
+// ── Show / Hide Payment Panel ──
+function showPaymentPanel() {
+    var panel = document.getElementById('paymentPanel');
+    var trigger = document.getElementById('btnShowPayment');
+    if (panel) { panel.style.display = 'block'; }
+    if (trigger) { trigger.style.display = 'none'; }
+}
+
+function hidePaymentPanel() {
+    var panel = document.getElementById('paymentPanel');
+    var trigger = document.getElementById('btnShowPayment');
+    if (panel) { panel.style.display = 'none'; }
+    if (trigger) { trigger.style.display = 'flex'; }
+}
+
+// ── Quick Cash ──
+function setCash(amount) {
+    var el = document.getElementById('cashReceived');
+    if (el) el.value = amount;
+}
+
+// ── Checkout ──
+function processCheckout() {
+    var el = document.getElementById('cashReceived');
+    var cash = parseFloat(el ? el.value : 0);
+    var totalEl = document.getElementById('grandTotalVal');
+    var total = parseFloat(totalEl ? totalEl.value : 0);
+
+    if (isNaN(cash) || cash <= 0) { alert('Please enter the cash amount received.'); return; }
+    if (cash < total) { alert('Insufficient cash. The total is ₱' + total.toFixed(2)); return; }
+
+    var btn = document.getElementById('checkoutBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing…';
+
+    fetch('/POS/Checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'cashReceived=' + cash
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.success) {
+            // Build receipt details
+            document.getElementById('rSubtotal').textContent = '₱' + d.subtotal.toFixed(2);
+            document.getElementById('rTax').textContent      = '₱' + d.tax.toFixed(2);
+            document.getElementById('rTotal').textContent     = '₱' + d.total.toFixed(2);
+            document.getElementById('rCash').textContent      = '₱' + d.cash.toFixed(2);
+            document.getElementById('rChange').textContent    = '₱' + d.change.toFixed(2);
+
+            var receiptHtml =
+                '<p style="font-weight:900; font-size:1.1rem; color:#1F2937; margin-bottom:0.25rem;">Receipt #' + d.receiptId + '</p>' +
+                '<p style="font-size:0.8rem; color:#9CA3AF;">Processed by: @(User.Identity?.Name ?? "Staff")</p>' +
+                '<p style="font-size:0.8rem; color:#9CA3AF; margin-bottom:0;">' + new Date().toLocaleString() + '</p>';
+
+            document.getElementById('receiptBody').innerHTML = receiptHtml;
+
+            // Build items list
+            var itemsHtml = '';
+            if (d.items && Array.isArray(d.items)) {
+                d.items.forEach(function(item) {
+                    var name = item.name || 'Item';
+                    var qty = item.qty || 1;
+                    var sub = typeof item.subtotal === 'number' ? item.subtotal.toFixed(2) : '0.00';
+                    
+                    itemsHtml += `
+                        <div class="receipt-row" style="font-size: 0.85rem; color: #1F2937; margin-bottom: 0.5rem; font-weight: 500;">
+                            <span>${qty}x ${name}</span>
+                            <span>₱${sub}</span>
+                        </div>
+                    `;
+                });
+            } else {
+                itemsHtml = '<p style="text-align:center; color:#9CA3AF; font-size:0.8rem;">No items found</p>';
+            }
+            document.getElementById('receiptItems').innerHTML = itemsHtml;
+
+            // Show overlay
+            document.getElementById('successOverlay').style.display = 'flex';
+            // Refresh cart to clear items
+            refreshCart();
+        } else {
+            alert(d.message);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check-circle"></i> Confirm Payment';
+        }
+    })
+    .catch(function() {
+        alert('Network error. Please try again.');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check-circle"></i> Confirm Payment';
+    });
+}
+
+// ── Close Receipt & Start New Order ──
+function closeSuccess() {
+    document.getElementById('successOverlay').style.display = 'none';
+    window.location.href = '/POS/Index';
+}
+
+// ── Live Search ──
+document.getElementById('searchInput').addEventListener('keyup', function(e) {
+    var val = this.value.toLowerCase();
+    document.querySelectorAll('#productGrid .product-card').forEach(function(card) {
+        var name = card.querySelector('.product-name').textContent.toLowerCase();
+        card.style.display = name.includes(val) ? '' : 'none';
+    });
+});
+</script>
+}

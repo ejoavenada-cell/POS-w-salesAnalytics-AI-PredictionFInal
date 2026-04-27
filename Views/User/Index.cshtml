@@ -1,0 +1,85 @@
+@model IEnumerable<FoodOrderingSytemAIAnalytics.Models.User>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "User Management";
+}
+
+<div class="section-bar" style="margin-bottom: 2rem;">
+    <div>
+        <h2 style="font-size: 1.75rem; font-weight: 900; color: #1F2937; margin-bottom: 0.25rem;">Staff Management</h2>
+        <span class="count">Manage system users and access levels</span>
+    </div>
+    <div style="display:flex; gap: 1rem;">
+        @* Add User button could go here if needed *@
+    </div>
+</div>
+
+<div class="category-card" style="padding: 1.5rem; border-radius: 24px; margin-bottom: 2rem;">
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: separate; border-spacing: 0 0.75rem;">
+            <thead>
+                <tr style="text-align: left;">
+                    <th style="padding: 1rem; color: #9CA3AF; font-size: 0.75rem; text-transform: uppercase; font-weight: 800;">User</th>
+                    <th style="padding: 1rem; color: #9CA3AF; font-size: 0.75rem; text-transform: uppercase; font-weight: 800;">Role</th>
+                    <th style="padding: 1rem; color: #9CA3AF; font-size: 0.75rem; text-transform: uppercase; font-weight: 800;">Age/Sex</th>
+                    <th style="padding: 1rem; color: #9CA3AF; font-size: 0.75rem; text-transform: uppercase; font-weight: 800;">Status</th>
+                    <th style="padding: 1rem; color: #9CA3AF; font-size: 0.75rem; text-transform: uppercase; font-weight: 800;">Joined</th>
+                    <th style="padding: 1rem; color: #9CA3AF; font-size: 0.75rem; text-transform: uppercase; font-weight: 800; text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model)
+                {
+                    <tr style="background: white; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: transform 0.2s;">
+                        <td style="padding: 1rem; border-radius: 16px 0 0 16px;">
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div style="width: 45px; height: 45px; border-radius: 12px; background: #F3F4F6; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1.5px solid #E5E7EB;">
+                                    @if (!string.IsNullOrEmpty(user.ImageUrl))
+                                    {
+                                        <img src="@user.ImageUrl" style="width: 100%; height: 100%; object-fit: cover;" />
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-user" style="color: #D1D5DB;"></i>
+                                    }
+                                </div>
+                                <div>
+                                    <div style="font-weight: 800; color: #1F2937; font-size: 0.95rem;">@user.Name</div>
+                                    <div style="font-size: 0.75rem; color: #9CA3AF; font-weight: 700;">ID: #@user.Id</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="padding: 1rem;">
+                            <span style="padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.75rem; font-weight: 800; background: @(user.Role == "Admin" ? "rgba(79, 70, 229, 0.1)" : "rgba(16, 185, 129, 0.1)"); color: @(user.Role == "Admin" ? "#4F46E5" : "#10B981"); text-transform: uppercase;">
+                                @user.Role
+                            </span>
+                        </td>
+                        <td style="padding: 1rem;">
+                            <div style="font-weight: 700; color: #4B5563; font-size: 0.85rem;">@user.Age yrs | @user.Sex</div>
+                        </td>
+                        <td style="padding: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <div style="width: 8px; height: 8px; border-radius: 50%; background: @(user.IsActive ? "#10B981" : "#EF4444");"></div>
+                                <span style="font-weight: 700; color: #4B5563; font-size: 0.85rem;">@(user.IsActive ? "Active" : "Inactive")</span>
+                            </div>
+                        </td>
+                        <td style="padding: 1rem;">
+                            <div style="font-weight: 700; color: #4B5563; font-size: 0.85rem;">@user.DateCreated.ToString("MMM dd, yyyy")</div>
+                        </td>
+                        <td style="padding: 1rem; border-radius: 0 16px 16px 0; text-align: right;">
+                            <button onclick="openUserModal('@Url.Action("Edit", "User", new { id = user.Id })')" class="btn-checkout" style="width: auto; padding: 0.5rem 1rem; height: 36px; margin-top: 0; font-size: 0.75rem; border-radius: 10px; background: #F3F4F6; color: #4B5563; box-shadow: none;">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Specific scripts for User Index if any
+    </script>
+}

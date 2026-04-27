@@ -1,0 +1,177 @@
+@inject FoodOrderingSytemAIAnalytics.Data.ApplicationDbContext _context
+@{
+    var settings = _context.StoreSettings.FirstOrDefault() ?? new FoodOrderingSytemAIAnalytics.Models.StoreSetting();
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - @settings.StoreName</title>
+    <link rel="stylesheet" href="~/css/pos.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <div class="pos-wrapper">
+        <!-- ═══ Slim Sidebar ═══ -->
+        <aside class="pos-sidebar">
+            <div class="sidebar-brand" style="overflow: hidden;">
+                @if (!string.IsNullOrEmpty(settings.LogoUrl))
+                {
+                    <img src="@settings.LogoUrl" style="width: 100%; height: 100%; object-fit: contain;" alt="Logo" />
+                }
+                else
+                {
+                    <span>@(settings.StoreName.Length > 2 ? settings.StoreName.Substring(0, 2).ToUpper() : settings.StoreName.ToUpper())</span>
+                }
+            </div>
+
+            <div class="sidebar-profile" style="padding: 1rem; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 1rem;">
+                <div style="position: relative; display: inline-block;">
+                    <img src="@(User.FindFirst("ImageUrl")?.Value ?? $"https://ui-avatars.com/api/?name={User.Identity?.Name}&background=2D9F96&color=fff")" 
+                         style="width: 50px; height: 50px; border-radius: 12px; object-fit: cover; border: 2px solid rgba(255,255,255,0.1);" />
+                    <button onclick="openSelfEditModal()" style="position: absolute; bottom: -5px; right: -5px; width: 20px; height: 20px; border-radius: 50%; background: var(--primary-color); border: 2px solid #111827; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; cursor: pointer;">
+                        <i class="fas fa-pen"></i>
+                    </button>
+                </div>
+                <div style="margin-top: 0.5rem; font-weight: 800; color: white; font-size: 0.7rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">@User.Identity?.Name</div>
+                <div style="font-size: 0.6rem; color: #9CA3AF; font-weight: 700; text-transform: uppercase;">@User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value</div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="@Url.Action("Index", "POS")" class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "POS" ? "active" : "")">
+                    <i class="fas fa-cash-register"></i><span>POS</span>
+                </a>
+                <a href="@Url.Action("History", "Transaction")" class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Transaction" ? "active" : "")">
+                    <i class="fas fa-receipt"></i><span>Orders</span>
+                </a>
+                @if (User.IsInRole("Admin"))
+                {
+                    <a href="@Url.Action("Index", "Admin")" class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["Action"]?.ToString() == "Index" ? "active" : "")">
+                        <i class="fas fa-chart-pie"></i><span>Admin</span>
+                    </a>
+                    <a href="@Url.Action("Products", "Admin")" class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["Action"]?.ToString() == "Products" ? "active" : "")">
+                        <i class="fas fa-box"></i><span>Menu</span>
+                    </a>
+                    <a href="@Url.Action("Index", "User")" class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "User" ? "active" : "")">
+                        <i class="fas fa-users"></i><span>Staff</span>
+                    </a>
+                    <a href="@Url.Action("Index", "Settings")" class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Settings" ? "active" : "")">
+                        <i class="fas fa-cog"></i><span>Settings</span>
+                    </a>
+                }
+            </nav>
+
+            <div class="sidebar-bottom">
+                <form asp-controller="Auth" asp-action="Logout" method="post">
+                    <button type="submit" class="sidebar-link">
+                        <i class="fas fa-sign-out-alt"></i><span>Exit</span>
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <!-- ═══ Main Terminal ═══ -->
+        <main class="pos-terminal">
+            <!-- Header -->
+            <header class="pos-header">
+                <div class="search-box">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="searchInput" placeholder="Search menu, orders and more…" 
+                           value="@(Context.Request.Query["searchTerm"])" />
+                </div>
+                <div class="user-pill">
+                    <img src="@(User.FindFirst("ImageUrl")?.Value ?? $"https://ui-avatars.com/api/?name={User.Identity?.Name}&background=2D9F96&color=fff")" alt="avatar" style="object-fit: cover;" />
+                    <span style="font-weight:700; color:#1F2937; font-size:0.9rem;">@(User.Identity?.Name ?? "Staff")</span>
+                </div>
+            </header>
+
+            @await RenderSectionAsync("CategoryTabs", required: false)
+
+            <div class="terminal-content">
+                @RenderBody()
+            </div>
+        </main>
+
+        @await RenderSectionAsync("RightSidebar", required: false)
+    </div>
+
+    <div id="userModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:3000; align-items:center; justify-content:center; backdrop-filter: blur(4px);">
+        <div id="userModalContent" style="background:white; padding: 0; border-radius:28px; max-width:500px; width:90%; max-height: 95vh; overflow: hidden; box-shadow: 0 30px 60px -12px rgba(0,0,0,0.3); display: flex; flex-direction: column;">
+            <!-- Content loaded via AJAX -->
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script>
+        // Header Search Functionality
+        document.getElementById('searchInput')?.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                const url = new URL(window.location.href);
+                url.searchParams.set('searchTerm', this.value);
+                if (url.searchParams.has('page')) url.searchParams.delete('page');
+                window.location.href = url.href;
+            }
+        });
+
+        // Global User Profile Modal
+        function openUserModal(url) {
+            fetch(url, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.text())
+            .then(html => {
+                document.getElementById('userModalContent').innerHTML = html;
+                document.getElementById('userModal').style.display = 'flex';
+            });
+        }
+
+        function openSelfEditModal() {
+            openUserModal('@Url.Action("Profile", "User")');
+        }
+
+        function updateUserFileName(input) {
+            const display = document.getElementById('userFileNameDisplay');
+            if (input.files && input.files[0]) {
+                display.textContent = 'Selected: ' + input.files[0].name;
+                display.style.display = 'block';
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('userImagePreview');
+                    const placeholder = document.getElementById('userImagePlaceholder');
+                    if (preview) {
+                        preview.src = e.target.result;
+                    } else if (placeholder) {
+                        const img = document.createElement('img');
+                        img.id = 'userImagePreview';
+                        img.src = e.target.result;
+                        img.style.width = '100%';
+                        img.style.height = '100%';
+                        img.style.objectFit = 'cover';
+                        placeholder.parentNode.appendChild(img);
+                        placeholder.remove();
+                    }
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('userModal')) {
+                document.getElementById('userModal').style.display = 'none';
+            }
+            if (event.target == document.getElementById('productModal')) {
+                document.getElementById('productModal').style.display = 'none';
+            }
+            if (event.target == document.getElementById('categoryModal')) {
+                document.getElementById('categoryModal').style.display = 'none';
+            }
+        }
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,85 @@
+@model FoodOrderingSytemAIAnalytics.Models.ViewModels.CartViewModel
+
+<div class="cart-title">Current Order</div>
+
+<div class="cart-items">
+    @if (Model.Items.Any())
+    {
+        @foreach (var item in Model.Items)
+        {
+            <div class="cart-row">
+                <div class="cart-icon">@item.ProductName[0]</div>
+                <div class="cart-detail">
+                    <div class="cart-detail-name">@item.ProductName</div>
+                    <div class="cart-detail-price">₱@item.Price.ToString("N2") × @item.Quantity = ₱@item.Subtotal.ToString("N2")</div>
+                    <div class="cart-detail-remove" onclick="removeFromCart(@item.ProductId)">Remove</div>
+                </div>
+                <div class="qty-ctrl">
+                    <button class="qty-btn" onclick="updateQuantity(@item.ProductId, @(item.Quantity - 1))">−</button>
+                    <span class="qty-val">@item.Quantity</span>
+                    <button class="qty-btn" onclick="updateQuantity(@item.ProductId, @(item.Quantity + 1))">+</button>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="cart-empty">
+            <i class="fas fa-shopping-basket"></i>
+            <p>Your cart is empty</p>
+        </div>
+    }
+</div>
+
+<!-- Summary (always visible) -->
+<div class="cart-summary">
+    <div class="summary-row">
+        <span>Subtotal</span>
+        <span>₱@Model.TotalAmount.ToString("N2")</span>
+    </div>
+    <div class="summary-row">
+        <span>VAT (12%)</span>
+        <span>₱@Model.TaxAmount.ToString("N2")</span>
+    </div>
+    <div class="summary-total">
+        <span>Total</span>
+        <span>₱@Model.GrandTotal.ToString("N2")</span>
+    </div>
+    <input type="hidden" id="grandTotalVal" value="@Model.GrandTotal" />
+
+    @if (Model.Items.Any())
+    {
+        <!-- Phase 1: "Checkout" trigger button -->
+        <button class="btn-checkout" id="btnShowPayment" onclick="showPaymentPanel()">
+            <i class="fas fa-credit-card"></i> Checkout
+        </button>
+
+        <!-- Phase 2: Payment panel (hidden by default) -->
+        <div id="paymentPanel" style="display:none; margin-top:1rem; animation: slideUp 0.3s ease;">
+            <label style="font-size:0.7rem; font-weight:700; color:#6B7280; text-transform:uppercase; letter-spacing:0.05em; display:block; margin-bottom:0.5rem;">Payment Received</label>
+            <div class="bill-grid">
+                <button class="bill-btn" type="button" onclick="setCash(50)">50</button>
+                <button class="bill-btn" type="button" onclick="setCash(100)">100</button>
+                <button class="bill-btn" type="button" onclick="setCash(200)">200</button>
+                <button class="bill-btn" type="button" onclick="setCash(500)">500</button>
+            </div>
+            <div class="cash-wrap">
+                <span class="prefix">₱</span>
+                <input type="number" id="cashReceived" class="cash-input" placeholder="0.00" step="0.01" />
+            </div>
+
+            <button class="btn-checkout" id="checkoutBtn" onclick="processCheckout()" style="margin-top:0.75rem;">
+                <i class="fas fa-check-circle"></i> Confirm Payment
+            </button>
+            <button type="button" onclick="hidePaymentPanel()" style="width:100%; margin-top:0.5rem; padding:0.7rem; border:none; background:none; color:#EF4444; font-weight:700; font-size:0.85rem; cursor:pointer;">
+                Cancel
+            </button>
+        </div>
+    }
+    else
+    {
+        <button class="btn-checkout" disabled>
+            <i class="fas fa-shopping-basket"></i> Empty Cart
+        </button>
+    }
+</div>

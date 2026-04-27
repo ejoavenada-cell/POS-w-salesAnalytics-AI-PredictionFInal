@@ -1,0 +1,135 @@
+@model IEnumerable<FoodOrderingSytemAIAnalytics.Models.Transaction>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Sales History";
+}
+
+<!-- Stats Overview -->
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2.5rem;">
+    <div class="category-card" style="padding: 1.5rem; display: flex; align-items: center; gap: 1.25rem;">
+        <div style="width: 56px; height: 56px; border-radius: 16px; background: rgba(45, 159, 150, 0.1); color: var(--primary-color); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+            <i class="fas fa-wallet"></i>
+        </div>
+        <div>
+            <p style="margin: 0; font-size: 0.75rem; font-weight: 800; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.05em;">Total Revenue</p>
+            <h3 style="margin: 0.25rem 0 0; font-size: 1.5rem; font-weight: 900; color: #1F2937;">₱@Model.Sum(t => t.TotalAmount).ToString("N2")</h3>
+        </div>
+    </div>
+    <div class="category-card" style="padding: 1.5rem; display: flex; align-items: center; gap: 1.25rem;">
+        <div style="width: 56px; height: 56px; border-radius: 16px; background: rgba(59, 130, 246, 0.1); color: #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+            <i class="fas fa-shopping-bag"></i>
+        </div>
+        <div>
+            <p style="margin: 0; font-size: 0.75rem; font-weight: 800; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.05em;">Order Volume</p>
+            <h3 style="margin: 0.25rem 0 0; font-size: 1.5rem; font-weight: 900; color: #1F2937;">@Model.Count()</h3>
+        </div>
+    </div>
+    <div class="category-card" style="padding: 1.5rem; display: flex; align-items: center; gap: 1.25rem;">
+        <div style="width: 56px; height: 56px; border-radius: 16px; background: rgba(245, 158, 11, 0.1); color: #f59e0b; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+            <i class="fas fa-receipt"></i>
+        </div>
+        <div>
+            <p style="margin: 0; font-size: 0.75rem; font-weight: 800; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.05em;">Average Order</p>
+            <h3 style="margin: 0.25rem 0 0; font-size: 1.5rem; font-weight: 900; color: #1F2937;">@(Model.Any() ? "₱" + (Model.Average(t => t.TotalAmount)).ToString("N2") : "₱0.00")</h3>
+        </div>
+    </div>
+</div>
+
+<div class="section-bar" style="margin-bottom: 2rem;">
+    <div>
+        <h2 style="font-size: 1.75rem; font-weight: 900; color: #1F2937; margin-bottom: 0.25rem;">Order Transactions</h2>
+        <span class="count">Recent history and logs</span>
+    </div>
+    
+    <form asp-action="History" method="get" style="display:flex; gap: 0.75rem; align-items: center; background: white; padding: 0.5rem; border-radius: 16px; border: 1px solid var(--border-color);">
+        <div style="display:flex; align-items:center; gap:0.4rem; padding: 0 0.5rem;">
+            <i class="far fa-calendar-alt" style="color: #9CA3AF; font-size: 0.8rem;"></i>
+            <input type="date" name="startDate" value="@ViewBag.StartDate" style="border:none; outline:none; font-size:0.8rem; font-weight:700; color:#4B5563;">
+            <span style="color:#D1D5DB; font-weight: 900;">-</span>
+            <input type="date" name="endDate" value="@ViewBag.EndDate" style="border:none; outline:none; font-size:0.8rem; font-weight:700; color:#4B5563;">
+        </div>
+        <button type="submit" class="add-btn" style="width: auto; padding: 0 1rem; height: 36px; border-radius: 10px;">
+            <i class="fas fa-filter"></i>
+        </button>
+    </form>
+</div>
+
+<div class="category-card" style="width:100%; overflow:hidden; border-radius: 24px; padding: 0; border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+    <table class="table" style="width:100%; border-collapse: collapse;">
+        <thead>
+            <tr style="text-align:left; background: #F9FAFB; border-bottom: 1px solid var(--border-color);">
+                <th style="padding: 1.5rem 1.75rem; font-size: 0.75rem; font-weight: 800; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.05em;">Transaction</th>
+                <th style="padding: 1.5rem 1.75rem; font-size: 0.75rem; font-weight: 800; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.05em;">Date & Time</th>
+                <th style="padding: 1.5rem 1.75rem; font-size: 0.75rem; font-weight: 800; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.05em;">Staff</th>
+                <th style="padding: 1.5rem 1.75rem; font-size: 0.75rem; font-weight: 800; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.05em;">Amount</th>
+                <th style="padding: 1.5rem 1.75rem; font-size: 0.75rem; font-weight: 800; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.05em;">Status</th>
+                <th style="padding: 1.5rem 1.75rem; font-size: 0.75rem; font-weight: 800; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.05em; text-align: right;">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr class="transaction-row" style="border-bottom: 1px solid #F3F4F6; transition: all 0.2s;">
+                    <td style="padding: 1.5rem 1.75rem;">
+                        <div style="font-weight: 900; color: var(--primary-color); font-size: 0.95rem;">@item.TransactionCode</div>
+                    </td>
+                    <td style="padding: 1.5rem 1.75rem;">
+                        <div style="color: #1F2937; font-weight: 800; font-size: 0.9rem;">@item.Date.ToString("MMM dd, yyyy")</div>
+                        <div style="color: #9CA3AF; font-size: 0.75rem; font-weight: 700;">@item.Date.ToString("HH:mm")</div>
+                    </td>
+                    <td style="padding: 1.5rem 1.75rem;">
+                        <div style="display:flex; align-items:center; gap:0.75rem;">
+                            <img src="https://ui-avatars.com/api/?name=@item.User.Name&background=E9F6F5&color=2D9F96&size=64&font-size=0.35&bold=true" style="width:32px; height:32px; border-radius:10px;">
+                            <span style="font-weight: 700; color: #4B5563;">@item.User.Name</span>
+                        </div>
+                    </td>
+                    <td style="padding: 1.5rem 1.75rem; font-weight: 900; color: #1F2937; font-size: 1.05rem;">₱@item.TotalAmount.ToString("N2")</td>
+                    <td style="padding: 1.5rem 1.75rem;">
+                        <span style="background: rgba(16, 185, 129, 0.1); color: #10B981; padding: 0.5rem 0.85rem; border-radius: 10px; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.025em; display: inline-flex; align-items: center; gap: 0.4rem;">
+                            <span style="width: 6px; height: 6px; border-radius: 50%; background: #10B981;"></span>
+                            Paid
+                        </span>
+                    </td>
+                    <td style="padding: 1.5rem 1.75rem; text-align: right;">
+                        <button onclick="showDetails(@item.Id)" class="btn-checkout" style="padding: 0; width: 42px; height: 42px; margin-top: 0; border-radius: 12px; background: #F3F4F6; color: #4B5563; box-shadow: none;">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<style>
+    .transaction-row:hover {
+        background-color: #F9FAFB !important;
+        transform: scale(1.002);
+    }
+</style>
+
+<!-- Details Modal -->
+<div id="detailsModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; align-items:center; justify-content:center; backdrop-filter: blur(4px);">
+    <div id="modalContent" style="background:white; padding: 0; border-radius:28px; max-width:500px; width:90%; overflow: hidden; box-shadow: 0 30px 60px -12px rgba(0,0,0,0.3);">
+        <!-- Content will be loaded here via JS -->
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function showDetails(id) {
+            fetch(`/Transaction/Details/${id}`)
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('modalContent').innerHTML = html;
+                document.getElementById('detailsModal').style.display = 'flex';
+            });
+        }
+
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('detailsModal')) {
+                document.getElementById('detailsModal').style.display = 'none';
+            }
+        }
+    </script>
+}
