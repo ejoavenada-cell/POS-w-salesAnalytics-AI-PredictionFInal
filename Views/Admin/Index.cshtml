@@ -145,18 +145,22 @@
     </div>
 
     <!-- Category Distribution -->
-    <div class="glass-card" style="height: 480px; display: flex; flex-direction: column;">
-        <h3 style="font-size: 1.25rem; font-weight: 900; color: #1F2937; margin-bottom: 0.5rem;">Market Share</h3>
+    <div class="glass-card" style="display: flex; flex-direction: column; min-height: 480px;">
+        <h3 style="font-size: 1.25rem; font-weight: 900; color: #1F2937; margin-bottom: 0.25rem;">Market Share</h3>
         <p style="color: #9CA3AF; font-size: 0.8rem; font-weight: 600; margin-bottom: 2rem;">Revenue by category</p>
-        <div style="flex: 1; display: flex; align-items: center; justify-content: center; position: relative;">
-            <canvas id="categoryChart"></canvas>
-            <div style="position: absolute; text-align: center; pointer-events: none;">
-                <div style="font-size: 0.7rem; font-weight: 800; color: #9CA3AF; text-transform: uppercase;">Total</div>
-                <div style="font-size: 1.25rem; font-weight: 900; color: #1F2937;">100%</div>
+        
+        <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="height: 220px; display: flex; align-items: center; justify-content: center; position: relative;">
+                <canvas id="categoryChart"></canvas>
+                <div style="position: absolute; text-align: center; pointer-events: none; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                    <div style="font-size: 0.65rem; font-weight: 800; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.05em;">Market</div>
+                    <div style="font-size: 1.15rem; font-weight: 900; color: #1F2937;">Pulse</div>
+                </div>
             </div>
-        </div>
-        <div id="categoryLegend" style="margin-top: 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
-            <!-- Legend items will be injected by JS -->
+            
+            <div id="categoryLegend" style="margin-top: 1.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; max-height: 120px; overflow-y: auto; padding-right: 5px;">
+                <!-- Legend items will be injected by JS -->
+            </div>
         </div>
     </div>
 </div>
@@ -378,16 +382,27 @@
             }
         });
 
-        // Inject Custom Legend
+        // Inject Custom Legend with Percentages
         const legendContainer = document.getElementById('categoryLegend');
+        const totalRev = catValues.reduce((a, b) => a + b, 0);
+        
         catLabels.forEach((label, i) => {
+            const percentage = totalRev > 0 ? ((catValues[i] / totalRev) * 100).toFixed(1) : 0;
             const item = document.createElement('div');
             item.style.display = 'flex';
             item.style.alignItems = 'center';
+            item.style.justifyContent = 'space-between';
             item.style.gap = '0.5rem';
+            item.style.padding = '0.4rem 0.6rem';
+            item.style.background = 'rgba(0,0,0,0.02)';
+            item.style.borderRadius = '8px';
+            
             item.innerHTML = `
-                <div style="width:10px; height:10px; border-radius:50%; background:${palette[i % palette.length]}"></div>
-                <span style="font-size:0.75rem; font-weight:800; color:#4B5563;">${label}</span>
+                <div style="display: flex; align-items: center; gap: 0.5rem; overflow: hidden;">
+                    <div style="width:8px; height:8px; border-radius:50%; flex-shrink:0; background:${palette[i % palette.length]}"></div>
+                    <span style="font-size:0.7rem; font-weight:800; color:#4B5563; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${label}</span>
+                </div>
+                <span style="font-size:0.7rem; font-weight:900; color:var(--primary-color); opacity: 0.8;">${percentage}%</span>
             `;
             legendContainer.appendChild(item);
         });
