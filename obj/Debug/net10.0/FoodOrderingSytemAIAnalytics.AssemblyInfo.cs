@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FoodOrderingSytemAIAnalytics")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+39b7bbd928ac5d24ec09a1adcfc39330b470c7e6")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6b87ff8793d9dd81bdebd03d236d133b8ba80cbc")]
 [assembly: System.Reflection.AssemblyProductAttribute("FoodOrderingSytemAIAnalytics")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FoodOrderingSytemAIAnalytics")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

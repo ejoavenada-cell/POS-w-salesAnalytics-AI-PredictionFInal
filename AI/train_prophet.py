@@ -11,14 +11,29 @@ MODEL_PATH = "prophet_model.json"
 RESULTS_PATH = "forecast_results.json"
 
 def get_connection():
-    """Detects available ODBC drivers and connects to LocalDB."""
+    """Detects environment and connects to either Postgres (Render) or SQL Server (Local)."""
+    pg_url = os.environ.get("DATABASE_URL")
+    
+    if pg_url:
+        print("Production Mode: Connecting to PostgreSQL...")
+        try:
+            import psycopg2
+            # Handle potential 'postgres://' vs 'postgresql://' issues in some URLs
+            if pg_url.startswith("postgres://"):
+                pg_url = pg_url.replace("postgres://", "postgresql://", 1)
+            return psycopg2.connect(pg_url)
+        except Exception as e:
+            print(f"PostgreSQL connection failure: {e}")
+            sys.exit(1)
+
+    print("Development Mode: Connecting to LocalDB...")
     try:
+        import pyodbc
         drivers = [d for d in pyodbc.drivers() if "SQL Server" in d]
         if not drivers:
             print("Error: No SQL Server ODBC drivers found.")
             sys.exit(1)
         
-        # Use the most modern driver available
         best_driver = drivers[0]
         for d in drivers:
             if "17" in d or "18" in d:
@@ -30,7 +45,7 @@ def get_connection():
         conn_str = f"Driver={{{best_driver}}};Server={server};Database={database};Trusted_Connection=yes;"
         return pyodbc.connect(conn_str)
     except Exception as e:
-        print(f"Database connection failure: {e}")
+        print(f"SQL Server connection failure: {e}")
         sys.exit(1)
 
 def fetch_db_data():

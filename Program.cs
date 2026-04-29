@@ -8,9 +8,23 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// Register ApplicationDbContext
+// Register ApplicationDbContext with Hybrid Support
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    var pgConnectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
+
+    if (!string.IsNullOrEmpty(pgConnectionString))
+    {
+        // Use PostgreSQL in Production (Render)
+        options.UseNpgsql(pgConnectionString);
+    }
+    else
+    {
+        // Use SQL Server locally
+        options.UseSqlServer(connectionString);
+    }
+});
 
 // Add Authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

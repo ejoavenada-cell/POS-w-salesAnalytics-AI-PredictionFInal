@@ -34,6 +34,7 @@ RUN pip install --no-cache-dir \
     prophet \
     pandas \
     pyodbc \
+    psycopg2-binary \
     holidays
 
 # Copy the built .NET app

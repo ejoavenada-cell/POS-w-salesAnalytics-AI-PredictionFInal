@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "jz6v3mrxWkU=",
+  "dgSpecHash": "w5vhQDiZTWc=",
   "success": true,
-  "projectFilePath": "C:\\Users\\IAI-TS\\source\\repos\\AI_Website\\FoodOrderingSytemAIAnalytics\\FoodOrderingSytemAIAnalytics.csproj",
+  "projectFilePath": "c:\\Users\\IAI-TS\\source\\repos\\AI_Website\\FoodOrderingSytemAIAnalytics\\FoodOrderingSytemAIAnalytics.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\IAI-TS\\.nuget\\packages\\azure.core\\1.47.1\\azure.core.1.47.1.nupkg.sha512",
     "C:\\Users\\IAI-TS\\.nuget\\packages\\azure.identity\\1.14.2\\azure.identity.1.14.2.nupkg.sha512",
@@ -42,6 +42,8 @@
     "C:\\Users\\IAI-TS\\.nuget\\packages\\miniexcel\\1.43.1\\miniexcel.1.43.1.nupkg.sha512",
     "C:\\Users\\IAI-TS\\.nuget\\packages\\mono.texttemplating\\3.0.0\\mono.texttemplating.3.0.0.nupkg.sha512",
     "C:\\Users\\IAI-TS\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512",
+    "C:\\Users\\IAI-TS\\.nuget\\packages\\npgsql\\9.0.2\\npgsql.9.0.2.nupkg.sha512",
+    "C:\\Users\\IAI-TS\\.nuget\\packages\\npgsql.entityframeworkcore.postgresql\\9.0.3\\npgsql.entityframeworkcore.postgresql.9.0.3.nupkg.sha512",
     "C:\\Users\\IAI-TS\\.nuget\\packages\\system.clientmodel\\1.5.1\\system.clientmodel.1.5.1.nupkg.sha512",
     "C:\\Users\\IAI-TS\\.nuget\\packages\\system.codedom\\9.0.0\\system.codedom.9.0.0.nupkg.sha512",
     "C:\\Users\\IAI-TS\\.nuget\\packages\\system.composition\\9.0.0\\system.composition.9.0.0.nupkg.sha512",
@@ -61,5 +63,30 @@
     "C:\\Users\\IAI-TS\\.nuget\\packages\\system.security.permissions\\9.0.0\\system.security.permissions.9.0.0.nupkg.sha512",
     "C:\\Users\\IAI-TS\\.nuget\\packages\\system.windows.extensions\\9.0.0\\system.windows.extensions.9.0.0.nupkg.sha512"
   ],
-  "logs": []
+  "logs": [
+    {
+      "code": "NU1608",
+      "level": "Warning",
+      "message": "Detected package version outside of dependency constraint: Npgsql.EntityFrameworkCore.PostgreSQL 9.0.3 requires Microsoft.EntityFrameworkCore (>= 9.0.1 && < 10.0.0) but version Microsoft.EntityFrameworkCore 10.0.0 was resolved.",
+      "projectPath": "c:\\Users\\IAI-TS\\source\\repos\\AI_Website\\FoodOrderingSytemAIAnalytics\\FoodOrderingSytemAIAnalytics.csproj",
+      "warningLevel": 1,
+      "filePath": "c:\\Users\\IAI-TS\\source\\repos\\AI_Website\\FoodOrderingSytemAIAnalytics\\FoodOrderingSytemAIAnalytics.csproj",
+      "libraryId": "Microsoft.EntityFrameworkCore",
+      "targetGraphs": [
+        "net10.0"
+      ]
+    },
+    {
+      "code": "NU1608",
+      "level": "Warning",
+      "message": "Detected package version outside of dependency constraint: Npgsql.EntityFrameworkCore.PostgreSQL 9.0.3 requires Microsoft.EntityFrameworkCore.Relational (>= 9.0.1 && < 10.0.0) but version Microsoft.EntityFrameworkCore.Relational 10.0.0 was resolved.",
+      "projectPath": "c:\\Users\\IAI-TS\\source\\repos\\AI_Website\\FoodOrderingSytemAIAnalytics\\FoodOrderingSytemAIAnalytics.csproj",
+      "warningLevel": 1,
+      "filePath": "c:\\Users\\IAI-TS\\source\\repos\\AI_Website\\FoodOrderingSytemAIAnalytics\\FoodOrderingSytemAIAnalytics.csproj",
+      "libraryId": "Microsoft.EntityFrameworkCore.Relational",
+      "targetGraphs": [
+        "net10.0"
+      ]
+    }
+  ]
 }

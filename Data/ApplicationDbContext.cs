@@ -22,10 +22,19 @@ namespace FoodOrderingSytemAIAnalytics.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Configure TransactionDetail Subtotal as computed (to match DB)
-            modelBuilder.Entity<TransactionDetail>()
-                .Property(td => td.Subtotal)
-                .HasComputedColumnSql("[Quantity] * [Price]");
+            // Configure TransactionDetail Subtotal as computed (Hybrid Syntax)
+            if (Database.IsSqlServer())
+            {
+                modelBuilder.Entity<TransactionDetail>()
+                    .Property(td => td.Subtotal)
+                    .HasComputedColumnSql("[Quantity] * [Price]");
+            }
+            else
+            {
+                modelBuilder.Entity<TransactionDetail>()
+                    .Property(td => td.Subtotal)
+                    .HasComputedColumnSql("Quantity * Price");
+            }
 
             // Configure Unique Constraints
             modelBuilder.Entity<User>()

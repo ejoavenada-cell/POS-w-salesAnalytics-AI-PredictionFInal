@@ -10,60 +10,68 @@ namespace FoodOrderingSytemAIAnalytics.Data
     {
         public static void Initialize(ApplicationDbContext context)
         {
-            // Ensure existing tables are updated to decimal
-            string alterTablesSql = @"
-                IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Products]') AND name = 'Stock' AND (type_name(system_type_id) = 'int' OR type_name(system_type_id) = 'numeric'))
-                BEGIN
-                    ALTER TABLE [dbo].[Products] ALTER COLUMN [Stock] decimal(18,2) NULL;
-                END
-
-                IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[TransactionDetails]') AND name = 'Quantity' AND type_name(system_type_id) = 'int')
-                BEGIN
-                    IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[TransactionDetails]') AND name = 'Subtotal' AND is_computed = 1)
+            if (context.Database.IsSqlServer())
+            {
+                // Ensure existing tables are updated to decimal (SQL Server Patches)
+                string alterTablesSql = @"
+                    IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Products]') AND name = 'Stock' AND (type_name(system_type_id) = 'int' OR type_name(system_type_id) = 'numeric'))
                     BEGIN
-                        ALTER TABLE [dbo].[TransactionDetails] DROP COLUMN [Subtotal];
+                        ALTER TABLE [dbo].[Products] ALTER COLUMN [Stock] decimal(18,2) NULL;
+                    END
+
+                    IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[TransactionDetails]') AND name = 'Quantity' AND type_name(system_type_id) = 'int')
+                    BEGIN
+                        IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[TransactionDetails]') AND name = 'Subtotal' AND is_computed = 1)
+                        BEGIN
+                            ALTER TABLE [dbo].[TransactionDetails] DROP COLUMN [Subtotal];
+                        END
+                        
+                        ALTER TABLE [dbo].[TransactionDetails] ALTER COLUMN [Quantity] decimal(18,2) NOT NULL;
+                        
+                        ALTER TABLE [dbo].[TransactionDetails] ADD [Subtotal] AS ([Quantity] * [Price]);
+                    END
+
+                    IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[RestockHistory]') AND type in (N'U'))
+                    BEGIN
+                        CREATE TABLE [dbo].[RestockHistory] (
+                            [Id] int IDENTITY(1,1) NOT NULL,
+                            [ProductId] int NOT NULL,
+                            [QuantityRestocked] decimal(18,2) NOT NULL,
+                            [RestockDate] datetime2 NOT NULL,
+                            [Remarks] nvarchar(max) NULL,
+                            [StockAfterRestock] decimal(18,2) NOT NULL,
+                            CONSTRAINT [PK_RestockHistory] PRIMARY KEY ([Id]),
+                            CONSTRAINT [FK_RestockHistory_Products_ProductId] FOREIGN KEY ([ProductId]) REFERENCES [dbo].[Products] ([Id]) ON DELETE CASCADE
+                        );
+                        CREATE INDEX [IX_RestockHistory_ProductId] ON [dbo].[RestockHistory] ([ProductId]);
+                    END
+                    ELSE
+                    BEGIN
+                        IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[RestockHistory]') AND name = 'QuantityRestocked' AND type_name(system_type_id) = 'int')
+                        BEGIN
+                            ALTER TABLE [dbo].[RestockHistory] ALTER COLUMN [QuantityRestocked] decimal(18,2) NOT NULL;
+                            ALTER TABLE [dbo].[RestockHistory] ALTER COLUMN [StockAfterRestock] decimal(18,2) NOT NULL;
+                        END
+                    END
+                    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[StoreSettings]') AND name = 'AIForecastHorizonHours')
+                    BEGIN
+                        ALTER TABLE [dbo].[StoreSettings] ADD [AIForecastHorizonHours] int NOT NULL DEFAULT 720;
+                        ALTER TABLE [dbo].[StoreSettings] ADD [AISensitivity] float NOT NULL DEFAULT 0.1;
+                        ALTER TABLE [dbo].[StoreSettings] ADD [AISeasonalityMode] nvarchar(max) NOT NULL DEFAULT 'multiplicative';
                     END
                     
-                    ALTER TABLE [dbo].[TransactionDetails] ALTER COLUMN [Quantity] decimal(18,2) NOT NULL;
-                    
-                    ALTER TABLE [dbo].[TransactionDetails] ADD [Subtotal] AS ([Quantity] * [Price]);
-                END
-
-                IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[RestockHistory]') AND type in (N'U'))
-                BEGIN
-                    CREATE TABLE [dbo].[RestockHistory] (
-                        [Id] int IDENTITY(1,1) NOT NULL,
-                        [ProductId] int NOT NULL,
-                        [QuantityRestocked] decimal(18,2) NOT NULL,
-                        [RestockDate] datetime2 NOT NULL,
-                        [Remarks] nvarchar(max) NULL,
-                        [StockAfterRestock] decimal(18,2) NOT NULL,
-                        CONSTRAINT [PK_RestockHistory] PRIMARY KEY ([Id]),
-                        CONSTRAINT [FK_RestockHistory_Products_ProductId] FOREIGN KEY ([ProductId]) REFERENCES [dbo].[Products] ([Id]) ON DELETE CASCADE
-                    );
-                    CREATE INDEX [IX_RestockHistory_ProductId] ON [dbo].[RestockHistory] ([ProductId]);
-                END
-                ELSE
-                BEGIN
-                    IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[RestockHistory]') AND name = 'QuantityRestocked' AND type_name(system_type_id) = 'int')
+                    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[StoreSettings]') AND name = 'LastAISync')
                     BEGIN
-                        ALTER TABLE [dbo].[RestockHistory] ALTER COLUMN [QuantityRestocked] decimal(18,2) NOT NULL;
-                        ALTER TABLE [dbo].[RestockHistory] ALTER COLUMN [StockAfterRestock] decimal(18,2) NOT NULL;
-                    END
-                END
-                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[StoreSettings]') AND name = 'AIForecastHorizonHours')
-                BEGIN
-                    ALTER TABLE [dbo].[StoreSettings] ADD [AIForecastHorizonHours] int NOT NULL DEFAULT 720;
-                    ALTER TABLE [dbo].[StoreSettings] ADD [AISensitivity] float NOT NULL DEFAULT 0.1;
-                    ALTER TABLE [dbo].[StoreSettings] ADD [AISeasonalityMode] nvarchar(max) NOT NULL DEFAULT 'multiplicative';
-                END
+                        ALTER TABLE [dbo].[StoreSettings] ADD [LastAISync] datetime2 NULL;
+                    END";
                 
-                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[StoreSettings]') AND name = 'LastAISync')
-                BEGIN
-                    ALTER TABLE [dbo].[StoreSettings] ADD [LastAISync] datetime2 NULL;
-                END";
-            
-            context.Database.ExecuteSqlRaw(alterTablesSql);
+                context.Database.ExecuteSqlRaw(alterTablesSql);
+            }
+            else
+            {
+                // For PostgreSQL / Other, use EF Core to create the schema if it doesn't exist
+                context.Database.EnsureCreated();
+            }
             
             // Call individual seeders
             SeedProducts(context);
