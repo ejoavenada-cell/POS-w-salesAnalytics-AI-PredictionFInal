@@ -26,5 +26,5 @@ run_git("remote set-url origin https://github.com/ejoavenada-cell/POS-w-salesAna
 run_git('commit -m "Final Build: POS with AI Sales Analytics"')
 
 # 5. Push
-print("Starting Push to GitHub...")
-run_git("push -u origin main")
+print("Starting Force Push to GitHub...")
+run_git("push -u origin main --force")
