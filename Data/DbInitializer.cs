@@ -61,7 +61,7 @@ namespace FoodOrderingSytemAIAnalytics.Data
                         CREATE TABLE IF NOT EXISTS categories (
                             id SERIAL PRIMARY KEY,
                             name TEXT UNIQUE NOT NULL,
-                            imageurl TEXT,
+                            icon TEXT,
                             isactive BOOLEAN
                         );
                         CREATE TABLE IF NOT EXISTS products (
@@ -117,6 +117,7 @@ namespace FoodOrderingSytemAIAnalytics.Data
                         ALTER TABLE transactions ADD COLUMN IF NOT EXISTS change DECIMAL DEFAULT 0;
                         ALTER TABLE transactions ADD COLUMN IF NOT EXISTS isweekend BOOLEAN DEFAULT false;
                         ALTER TABLE transactions ADD COLUMN IF NOT EXISTS rowversion BYTEA;
+                        ALTER TABLE categories ADD COLUMN IF NOT EXISTS icon TEXT DEFAULT 'fas fa-utensils';
                     ";
                     context.Database.ExecuteSqlRaw(patchSql);
 
