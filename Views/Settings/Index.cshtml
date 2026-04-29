@@ -17,10 +17,17 @@
         <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
     </div>
 }
+@if (TempData["ErrorMessage"] != null)
+{
+    <div style="background: #FEE2E2; color: #991B1B; padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; font-weight: 700; border-left: 5px solid #EF4444;">
+        <i class="fas fa-exclamation-circle"></i> @TempData["ErrorMessage"]
+    </div>
+}
 
 <div style="display: grid; grid-template-columns: 1fr 350px; gap: 2rem;">
     <div class="category-card" style="padding: 2rem; border-radius: 28px;">
         <form asp-action="Update" method="post" enctype="multipart/form-data">
+            <input type="hidden" asp-for="PrimaryColor" id="hiddenPrimaryColor" />
             <div style="margin-bottom: 2rem;">
                 <label asp-for="StoreName" style="display: block; font-weight: 800; color: #4B5563; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.5rem;">Store Name</label>
                 <input asp-for="StoreName" class="form-control" style="height: 52px; border-radius: 14px; border: 1.5px solid #E5E7EB; padding: 0 1.25rem; width: 100%; font-size: 1rem; font-weight: 700;" />
@@ -60,6 +67,54 @@
                 </div>
             </div>
 
+            <!-- AI Tuning Section -->
+            <div style="margin-top: 2.5rem; padding-top: 2rem; border-top: 1.5px solid #F3F4F6; margin-bottom: 2rem;">
+                <h3 style="font-size: 1.1rem; font-weight: 900; color: #1F2937; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.6rem;">
+                    <i class="fas fa-robot" style="color: #6366F1;"></i>
+                    Fine-Tune AI Forecasting
+                </h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+                    <div>
+                        <label asp-for="AIForecastHorizonHours" style="display: block; font-weight: 800; color: #4B5563; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.5rem;">Forecast Horizon (Hours)</label>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <input asp-for="AIForecastHorizonHours" type="range" min="12" max="2160" step="12" style="flex: 1; height: 6px; border-radius: 5px; appearance: none; background: #E5E7EB; cursor: pointer;" oninput="document.getElementById('horizonValue').textContent = this.value + 'h'" />
+                            <span id="horizonValue" style="font-weight: 900; color: #6366F1; font-size: 0.9rem; min-width: 60px;">@Model.AIForecastHorizonHours h</span>
+                        </div>
+                        <p style="font-size: 0.7rem; color: #9CA3AF; margin-top: 0.25rem;">Current: <b>@(Model.AIForecastHorizonHours / 24) days</b> ahead.</p>
+                    </div>
+
+                    <div>
+                        <label asp-for="AISensitivity" style="display: block; font-weight: 800; color: #4B5563; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.5rem;">Model Sensitivity (Trend Flexibility)</label>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <input asp-for="AISensitivity" type="range" min="0.01" max="0.5" step="0.01" style="flex: 1; height: 6px; border-radius: 5px; appearance: none; background: #E5E7EB; cursor: pointer;" oninput="document.getElementById('sensitivityValue').textContent = this.value" />
+                            <span id="sensitivityValue" style="font-weight: 900; color: #6366F1; font-size: 0.9rem; min-width: 60px;">@Model.AISensitivity</span>
+                        </div>
+                        <p style="font-size: 0.7rem; color: #9CA3AF; margin-top: 0.25rem;">Higher = More responsive to small trend changes. Lower = More stable.</p>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 2rem;">
+                    <label style="display: block; font-weight: 800; color: #4B5563; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.75rem;">Seasonality Mode</label>
+                    <div style="display: flex; gap: 1rem;">
+                        <label style="flex: 1; cursor: pointer;">
+                            <input type="radio" asp-for="AISeasonalityMode" value="multiplicative" style="display: none;" />
+                            <div class="seasonality-opt" onclick="selectSeasonality(this)" style="padding: 1.25rem; border-radius: 16px; border: 2px solid @(Model.AISeasonalityMode == "multiplicative" ? "#6366F1" : "#E5E7EB"); background: @(Model.AISeasonalityMode == "multiplicative" ? "#EEF2FF" : "white"); transition: all 0.2s;">
+                                <p style="font-weight: 900; color: #1F2937; margin: 0; font-size: 0.85rem;">Multiplicative (Default)</p>
+                                <p style="font-size: 0.7rem; color: #6B7280; margin: 0;">Forecast scales with growth. Best for food businesses.</p>
+                            </div>
+                        </label>
+                        <label style="flex: 1; cursor: pointer;">
+                            <input type="radio" asp-for="AISeasonalityMode" value="additive" style="display: none;" />
+                            <div class="seasonality-opt" onclick="selectSeasonality(this)" style="padding: 1.25rem; border-radius: 16px; border: 2px solid @(Model.AISeasonalityMode == "additive" ? "#6366F1" : "#E5E7EB"); background: @(Model.AISeasonalityMode == "additive" ? "#EEF2FF" : "white"); transition: all 0.2s;">
+                                <p style="font-weight: 900; color: #1F2937; margin: 0; font-size: 0.85rem;">Additive</p>
+                                <p style="font-size: 0.7rem; color: #6B7280; margin: 0;">Forecast increments are independent of growth magnitude.</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
             <div style="padding-top: 1rem; border-top: 1px solid #F3F4F6;">
                 <button type="submit" class="btn-checkout" style="max-width: 250px;">
                     <i class="fas fa-save"></i> Save Configuration
@@ -69,13 +124,70 @@
     </div>
 
     <div>
+        <div class="category-card" style="padding: 1.5rem; border-radius: 24px; margin-bottom: 2rem;">
+            <h3 style="font-size: 1rem; font-weight: 800; color: #1F2937; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-palette" style="color: var(--primary-color);"></i>
+                Theme Appearance
+            </h3>
+            
+            <p style="font-size: 0.75rem; color: #6B7280; font-weight: 600; margin-bottom: 1rem;">Primary Branding Color</p>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin-bottom: 1.5rem;">
+                <div class="color-preset" style="background: #2D9F96; height: 35px; border-radius: 8px; cursor: pointer;" onclick="updateTheme('#2D9F96')"></div>
+                <div class="color-preset" style="background: #3B82F6; height: 35px; border-radius: 8px; cursor: pointer;" onclick="updateTheme('#3B82F6')"></div>
+                <div class="color-preset" style="background: #8B5CF6; height: 35px; border-radius: 8px; cursor: pointer;" onclick="updateTheme('#8B5CF6')"></div>
+                <div class="color-preset" style="background: #EC4899; height: 35px; border-radius: 8px; cursor: pointer;" onclick="updateTheme('#EC4899')"></div>
+                <div class="color-preset" style="background: #F59E0B; height: 35px; border-radius: 8px; cursor: pointer;" onclick="updateTheme('#F59E0B')"></div>
+                <div class="color-preset" style="background: #10B981; height: 35px; border-radius: 8px; cursor: pointer;" onclick="updateTheme('#10B981')"></div>
+                <div class="color-preset" style="background: #F43F5E; height: 35px; border-radius: 8px; cursor: pointer;" onclick="updateTheme('#F43F5E')"></div>
+                <div class="color-preset" style="background: #111827; height: 35px; border-radius: 8px; cursor: pointer;" onclick="updateTheme('#111827')"></div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: #F9FAFB; border-radius: 12px; border: 1px solid #F3F4F6;">
+                <input type="color" id="customColor" value="@Model.PrimaryColor" style="width: 40px; height: 40px; border: none; background: none; cursor: pointer;" onchange="updateTheme(this.value)" />
+                <div>
+                    <p style="font-size: 0.75rem; font-weight: 800; color: #1F2937; margin: 0;">Custom Color</p>
+                    <p style="font-size: 0.65rem; color: #9CA3AF; margin: 0;">Choose your own HEX</p>
+                </div>
+            </div>
+            
+            <button class="btn-teal" style="width: 100%; margin-top: 1.5rem; background: #F3F4F6; color: #4B5563;" onclick="resetTheme()">
+                Reset to Default
+            </button>
+        </div>
+
+        <div class="category-card" style="padding: 1.5rem; border-radius: 24px; margin-bottom: 2rem;">
+            <h3 style="font-size: 1rem; font-weight: 800; color: #1F2937; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-robot" style="color: #6366F1;"></i>
+                AI Engine Status
+            </h3>
+            
+            <div style="padding: 1.25rem; background: #F8FAFC; border-radius: 16px; border: 1px solid #E2E8F0; margin-bottom: 1.5rem;">
+                <p style="font-size: 0.7rem; color: #64748B; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem;">Forecasting Model</p>
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #10B981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);"></div>
+                    <span style="font-weight: 800; color: #1F2937; font-size: 0.9rem;">Prophet AI v1.2.4 Active</span>
+                </div>
+                <div style="margin-top: 0.5rem; font-size: 0.75rem; color: #64748B;">
+                    <i class="fas fa-history"></i> Last Synchronized: 
+                    <span style="font-weight: 900; color: var(--primary-color);">@(Model.LastAISync?.ToString("MMM dd, HH:mm") ?? "Never")</span>
+                </div>
+            </div>
+
+            <form asp-action="RetrainAI" method="post">
+                <button type="submit" class="btn-teal" style="width: 100%; background: #6366F1; color: white; border: none; padding: 1rem; border-radius: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 0.5rem; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);">
+                    <i class="fas fa-sync-alt"></i> Synchronize AI Model
+                </button>
+            </form>
+            <p style="font-size: 0.65rem; color: #9CA3AF; text-align: center; margin-top: 0.75rem;">Retraining uses latest transaction data.</p>
+        </div>
+
         <div class="category-card" style="padding: 1.5rem; border-radius: 24px; background: #1F2937; color: white;">
-            <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 1rem;">Branding Tips</h3>
+            <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 1rem;">AI & Branding Tips</h3>
             <ul style="padding-left: 1.25rem; font-size: 0.85rem; color: #9CA3AF; display: flex; flex-direction: column; gap: 0.75rem;">
-                <li>Use a high-resolution logo with a transparent background.</li>
-                <li>Your logo will appear in the sidebar and on the login page.</li>
-                <li>The Store Name affects the browser title and system reports.</li>
-                <li>Currency symbol affects all price displays across the app.</li>
+                <li><b>Forecast Horizon:</b> Predicting too far (e.g. 1 year) may reduce daily accuracy.</li>
+                <li><b>AI Sensitivity:</b> If sales are volatile, use a lower sensitivity (0.05).</li>
+                <li><b>Retraining:</b> Retrain weekly to capture new customer behavior trends.</li>
+                <li>Use high-resolution logos with transparent backgrounds for best results.</li>
             </ul>
         </div>
     </div>
@@ -83,6 +195,41 @@
 
 @section Scripts {
     <script>
+        function updateTheme(color) {
+            document.getElementById('hiddenPrimaryColor').value = color;
+            document.getElementById('customColor').value = color;
+            
+            // Preview in real-time
+            document.documentElement.style.setProperty('--primary-color', color);
+            document.documentElement.style.setProperty('--pos-primary', color);
+            
+            ThemeManager.saveTheme({
+                primary: color,
+                secondary: '#3B82F6',
+                accent: '#f43f5e'
+            });
+        }
+
+        function resetTheme() {
+            localStorage.removeItem('tasty_station_theme');
+            window.location.reload();
+        }
+
+        function selectSeasonality(element) {
+            // Remove selection from all
+            document.querySelectorAll('.seasonality-opt').forEach(opt => {
+                opt.style.borderColor = '#E5E7EB';
+                opt.style.background = 'white';
+            });
+
+            // Add to selected
+            element.style.borderColor = '#6366F1';
+            element.style.background = '#EEF2FF';
+
+            // Check the radio button
+            element.parentElement.querySelector('input[type="radio"]').checked = true;
+        }
+
         function previewLogo(input) {
             const fileName = document.getElementById('logoFileName');
             if (input.files && input.files[0]) {

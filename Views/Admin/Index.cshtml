@@ -5,6 +5,89 @@
     var currentPeriod = ViewBag.CurrentPeriod as string ?? "7";
 }
 
+@section Styles {
+    <style>
+        .dashboard-grid-top {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .dashboard-grid-main {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 2rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .dashboard-grid-bottom {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 2.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .radar-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        /* 🖥️ Large Desktop Optimization (100% Zoom) */
+        @@media (max-width: 1600px) {
+            .dashboard-grid-bottom { gap: 1.5rem; }
+            .dashboard-grid-main { gap: 1.5rem; }
+        }
+
+        /* 💻 Standard Laptop / Small Desktop */
+        @@media (max-width: 1400px) {
+            .dashboard-grid-main, .dashboard-grid-bottom {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 📱 Tablet / Mobile */
+        @@media (max-width: 1100px) {
+            .radar-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @@media (max-width: 992px) {
+            .dashboard-grid-top {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @@media (max-width: 768px) {
+            .radar-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 600px) {
+            .dashboard-grid-top {
+                grid-template-columns: 1fr;
+            }
+            .section-bar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+        }
+
+        .glass-card {
+            min-height: auto !important; /* Allow natural height on small screens */
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-5px);
+        }
+    </style>
+}
+
 <style>
     .glass-card {
         background: white;
@@ -56,6 +139,12 @@
         border-color: var(--primary-color);
         box-shadow: 0 4px 10px rgba(45, 159, 150, 0.3);
     }
+
+    .restock-btn-hover:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.1);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
 </style>
 
 <div class="section-bar" style="margin-bottom: 2.5rem;">
@@ -68,10 +157,17 @@
             <i class="far fa-calendar-alt" style="color: var(--primary-color); font-size: 1.1rem;"></i>
             <span>@DateTime.Now.ToString("MMMM dd, yyyy")</span>
         </div>
+        <button onclick="document.getElementById('importModal').style.display='flex'" 
+                style="padding: 0.75rem 1.5rem; background: var(--primary-color); border: none; border-radius: 16px; display:flex; align-items:center; gap:0.75rem; font-weight:900; color: white; font-size: 0.9rem; box-shadow: 0 8px 16px rgba(45, 159, 150, 0.2); cursor: pointer; transition: all 0.2s;"
+                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 12px 20px rgba(45, 159, 150, 0.3)'"
+                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 8px 16px rgba(45, 159, 150, 0.2)'">
+            <i class="fas fa-file-import"></i>
+            <span>Bulk Import</span>
+        </button>
     </div>
 </div>
 
-<div class="dashboard-stats" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2.5rem;">
+<div class="dashboard-grid-top">
     <div class="glass-card" style="padding: 1.5rem;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.25rem;">
             <div style="width:52px; height:52px; border-radius:16px; background:var(--primary-light); color:var(--primary-color); display:flex; align-items:center; justify-content:center; font-size:1.6rem;">
@@ -112,20 +208,261 @@
         <div style="font-size: 1.8rem; font-weight: 900; color: #1F2937;">@Model.CategoryData.Count</div>
     </div>
 
-    <div class="glass-card" style="padding: 1.5rem;">
+    <div class="glass-card" style="padding: 1.5rem; border: 1px solid @(Model.StockSummary.LowStockCount > 0 ? "#FEE2E2" : "#E5E7EB");">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.25rem;">
-            <div style="width:52px; height:52px; border-radius:16px; background:#E0F2FE; color:#0EA5E9; display:flex; align-items:center; justify-content:center; font-size:1.6rem;">
-                <i class="fas fa-microchip"></i>
+            <div style="width:52px; height:52px; border-radius:16px; background:@(Model.StockSummary.LowStockCount > 0 ? "#FEF2F2" : "#E0F2FE"); color:@(Model.StockSummary.LowStockCount > 0 ? "#EF4444" : "#0EA5E9"); display:flex; align-items:center; justify-content:center; font-size:1.6rem;">
+                <i class="fas fa-boxes"></i>
             </div>
-            <div class="pulse" style="width: 12px; height: 12px; background: #0EA5E9; border-radius: 50%;"></div>
+            @if (Model.StockSummary.LowStockCount > 0)
+            {
+                <div class="pulse" style="width: 12px; height: 12px; background: #EF4444; border-radius: 50%;"></div>
+            }
         </div>
-        <div style="color: #6B7280; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem;">AI Forecast</div>
-        <div style="font-size: 1.8rem; font-weight: 900; color: #0EA5E9;">+₱8,420.00</div>
+        <div style="color: #6B7280; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem;">Stock Health</div>
+        <div style="font-size: 1.8rem; font-weight: 900; color: #1F2937;">@Model.StockSummary.LowStockCount <span style="font-size: 0.9rem; color: #9CA3AF; font-weight: 700;">Warnings</span></div>
     </div>
 </div>
 
-<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-bottom: 2.5rem;">
-    <!-- Revenue Overview -->
+<div class="dashboard-grid-main">
+    <div class="glass-card" style="display: flex; flex-direction: column;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div>
+                <h3 style="font-size: 1.25rem; font-weight: 900; color: #1F2937; margin-bottom: 0.25rem;">Consumption Velocity</h3>
+                <p style="color: #9CA3AF; font-size: 0.8rem; font-weight: 600;">Weekly stock usage trends</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <input type="month" 
+                       id="consumptionMonthPicker"
+                       value="@(Model.StockSummary.SelectedYear)-@(Model.StockSummary.SelectedMonth.ToString("D2"))" 
+                       onchange="updateDashboardFilter()"
+                       style="padding: 0.4rem 0.75rem; border-radius: 10px; border: 1.5px solid #E5E7EB; font-size: 0.75rem; font-weight: 800; color: #4B5563; cursor: pointer; outline: none;" />
+            </div>
+        </div>
+        
+        <div style="flex: 1; min-height: 180px; position: relative;">
+            <canvas id="inventoryUsageChart"></canvas>
+        </div>
+
+        <div style="margin-top: 1.5rem; padding: 1rem; border-radius: 16px; background: rgba(45, 159, 150, 0.05); border: 1px solid rgba(45, 159, 150, 0.1);">
+            <div style="font-size: 0.65rem; font-weight: 800; color: var(--primary-color); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem;">Demand Insight</div>
+            <p style="color: #4B5563; font-size: 0.85rem; font-weight: 600; margin: 0; line-height: 1.4;">
+                @Html.Raw(Model.StockSummary.MonthlyUsageInsight)
+            </p>
+        </div>
+    </div>
+
+    <div class="glass-card" style="display: flex; flex-direction: column;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <div>
+                <h3 style="font-size: 1.25rem; font-weight: 900; color: #1F2937; margin-bottom: 0.25rem;">Yearly Consumption Trend</h3>
+                <p style="color: #9CA3AF; font-size: 0.8rem; font-weight: 600;">Monthly stock demand since January @Model.StockSummary.SelectedYear</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <select id="trendYearPicker" 
+                        onchange="updateDashboardFilter('year')"
+                        style="padding: 0.4rem 0.75rem; border-radius: 10px; border: 1.5px solid #E5E7EB; font-size: 0.75rem; font-weight: 800; color: #4B5563; cursor: pointer; outline: none;">
+                    @for (int y = DateTime.Now.Year - 2; y <= DateTime.Now.Year; y++)
+                    {
+                        <option value="@y" selected="@(y == Model.StockSummary.SelectedYear)">@y</option>
+                    }
+                </select>
+                <div style="text-align: right; margin-left: 1rem;">
+                    <div style="font-size: 0.65rem; font-weight: 800; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.1em;">Avg Velocity</div>
+                    <div style="font-size: 1.2rem; font-weight: 900; color: var(--primary-color);">@Model.StockSummary.AverageWeeklyGrowth%</div>
+                </div>
+            </div>
+        </div>
+        <div style="flex: 1; min-height: 250px;">
+            <canvas id="yearlyUsageChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="glass-card" style="padding: 1.5rem; margin-bottom: 2.5rem; border: 1px solid @(Model.StockSummary.LowStockCount > 0 ? "#FEE2E2" : "#E5E7EB");">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <div>
+            <h3 style="font-size: 1.25rem; font-weight: 900; color: #1F2937; margin-bottom: 0.25rem;">Low Stock Radar</h3>
+            <p style="color: #9CA3AF; font-size: 0.8rem; font-weight: 600;">Inventory requiring attention (Threshold: < 100 units)</p>
+        </div>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+            <select onchange="toggleStockView(this.value)" class="period-btn" style="outline: none; cursor: pointer; border: 1px solid var(--primary-color); color: var(--primary-color); padding: 0.5rem 1.5rem;">
+                <option value="low">Low Stock Radar</option>
+                <option value="all">All Products Inventory</option>
+            </select>
+            <span id="low-stock-badge" style="background: #FEF2F2; color: #EF4444; padding: 0.5rem 1rem; border-radius: 12px; font-weight: 900; font-size: 0.75rem; letter-spacing: 0.05em;">@Model.StockSummary.LowStockCount ITEMS LOW</span>
+            <a href="@Url.Action("Products", "Admin")" class="period-btn">Restock All</a>
+        </div>
+    </div>
+
+    <!-- Low Stock View -->
+    <div id="radar-grid-low" class="radar-grid">
+        @if (Model.StockSummary.LowStockItems.Any())
+        {
+            @foreach (var item in Model.StockSummary.LowStockItems.OrderBy(i => i.CurrentStock).Take(9))
+            {
+                var percent = item.StockPercentage;
+                var barColor = percent <= 15 ? "#EF4444" : percent <= 30 ? "#F59E0B" : percent <= 50 ? "#FBBF24" : "#10B981";
+                var bgColor = percent <= 15 ? "#FEF2F2" : percent <= 30 ? "#FFFBEB" : percent <= 50 ? "#FFFBEB" : "#F0FDF4";
+                var statusLabel = percent <= 15 ? "CRITICAL" : percent <= 30 ? "LOW" : percent <= 50 ? "WARNING" : "HEALTHY";
+                
+                <div class="radar-item" style="padding: 1.25rem; border-radius: 24px; background: white; border: 1px solid #E5E7EB; display: flex; gap: 1.25rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem; flex: 1;">
+                        <div style="width: 80px; height: 80px; border-radius: 18px; background: #F3F4F6; overflow: hidden; border: 2px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                            @if (!string.IsNullOrEmpty(item.ImageUrl))
+                            {
+                                <img src="@item.ImageUrl" style="width: 100%; height: 100%; object-fit: cover;" alt="@item.ProductName" />
+                            }
+                            else
+                            {
+                                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #9CA3AF; font-size: 1.5rem; font-weight: 900;">@item.ProductName[0]</div>
+                            }
+                        </div>
+                        <div>
+                            <div style="font-weight: 900; color: #1F2937; font-size: 0.95rem; line-height: 1.2; margin-bottom: 0.25rem;">@item.ProductName</div>
+                            <div style="font-size: 0.75rem; color: #6B7280; font-weight: 700;">Stock: <span style="color: @barColor; font-weight: 900;">@item.CurrentStock</span> / 500</div>
+                        </div>
+
+                        <!-- Quick Restock Action -->
+                        <div style="margin-top: 0.75rem; display: flex; gap: 0.4rem; align-items: center; background: #F9FAFB; padding: 0.4rem; border-radius: 14px; border: 1px solid #E5E7EB; width: fit-content;">
+                            <div style="display: flex; align-items: center; background: white; border: 1px solid #D1D5DB; border-radius: 8px; padding: 0 0.4rem;">
+                                <input type="number" 
+                                       id="restock_low_@item.ProductId" 
+                                       step="any" 
+                                       min="0.01"
+                                       placeholder="0.00" 
+                                       style="width: 65px; height: 32px; border: none; background: transparent; font-size: 0.8rem; font-weight: 800; color: #111827; outline: none; text-align: center;" 
+                                       value="@item.RecommendedRestock.ToString("0.##")" />
+                            </div>
+                            <button onclick="quickRestock(@item.ProductId, '@item.ProductName', 'restock_low_@item.ProductId')" 
+                                    class="restock-btn-hover" 
+                                    style="background: var(--primary-color); color: white; border: none; height: 32px; padding: 0 0.8rem; border-radius: 8px; font-size: 0.7rem; font-weight: 900; cursor: pointer; white-space: nowrap; transition: all 0.2s ease;">
+                                <i class="fas fa-plus"></i> Restock
+                            </button>
+                        </div>
+                    </div>
+                    <div style="width: 14px; height: 100px; background: #F3F4F6; border-radius: 10px; overflow: hidden; display: flex; flex-direction: column-reverse; align-self: center;">
+                        <div style="height: @(percent)%; background: @barColor; border-radius: 10px; transition: height 1s ease-out; box-shadow: 0 0 10px @(barColor)44;"></div>
+                    </div>
+                    <div style="position: absolute; top: 1rem; right: 1rem; padding: 0.25rem 0.6rem; border-radius: 8px; font-size: 0.6rem; font-weight: 900; background: @bgColor; color: @barColor; text-transform: uppercase; letter-spacing: 0.05em;">
+                        @statusLabel
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div style="grid-column: span 3; padding: 4rem; text-align: center; color: #9CA3AF;">
+                <i class="fas fa-check-circle" style="font-size: 3rem; color: #10B981; margin-bottom: 1.5rem; display: block;"></i>
+                <h4 style="color: #1F2937; font-weight: 800; margin-bottom: 0.5rem;">Inventory Optimal</h4>
+                <p style="font-weight: 600;">All products are currently above the safety threshold.</p>
+            </div>
+        }
+    </div>
+
+    <!-- All Stocks View -->
+    <div id="radar-grid-all" class="radar-grid" style="display: none;">
+        @foreach (var item in Model.StockSummary.AllStockItems.OrderBy(i => i.CurrentStock).Take(12))
+        {
+            var percent = item.StockPercentage;
+            var barColor = percent <= 15 ? "#EF4444" : percent <= 30 ? "#F59E0B" : percent <= 50 ? "#FBBF24" : "#10B981";
+            var bgColor = percent <= 15 ? "#FEF2F2" : percent <= 30 ? "#FFFBEB" : percent <= 50 ? "#FFFBEB" : "#F0FDF4";
+            var statusLabel = percent <= 15 ? "CRITICAL" : percent <= 30 ? "LOW" : percent <= 50 ? "WARNING" : "HEALTHY";
+            
+            <div class="radar-item" style="padding: 1.25rem; border-radius: 24px; background: white; border: 1px solid #E5E7EB; display: flex; gap: 1.25rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+                <div style="display: flex; flex-direction: column; gap: 0.75rem; flex: 1;">
+                    <div style="width: 80px; height: 80px; border-radius: 18px; background: #F3F4F6; overflow: hidden; border: 2px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                        @if (!string.IsNullOrEmpty(item.ImageUrl))
+                        {
+                            <img src="@item.ImageUrl" style="width: 100%; height: 100%; object-fit: cover;" alt="@item.ProductName" />
+                        }
+                        else
+                        {
+                            <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #9CA3AF; font-size: 1.5rem; font-weight: 900;">@item.ProductName[0]</div>
+                        }
+                    </div>
+                    <div>
+                        <div style="font-weight: 900; color: #1F2937; font-size: 0.95rem; line-height: 1.2; margin-bottom: 0.25rem;">@item.ProductName</div>
+                        <div style="font-size: 0.75rem; color: #6B7280; font-weight: 700;">Stock: <span style="color: @barColor; font-weight: 900;">@item.CurrentStock</span> / 500</div>
+                    </div>
+
+                    <!-- Quick Restock Action -->
+                    <div style="margin-top: 0.75rem; display: flex; gap: 0.4rem; align-items: center; background: #F9FAFB; padding: 0.4rem; border-radius: 14px; border: 1px solid #E5E7EB; width: fit-content;">
+                        <div style="display: flex; align-items: center; background: white; border: 1px solid #D1D5DB; border-radius: 8px; padding: 0 0.4rem;">
+                            <input type="number" 
+                                   id="restock_all_@item.ProductId" 
+                                   step="any" 
+                                   min="0.01"
+                                   placeholder="0.00" 
+                                   style="width: 65px; height: 32px; border: none; background: transparent; font-size: 0.8rem; font-weight: 800; color: #111827; outline: none; text-align: center;" 
+                                   value="@item.RecommendedRestock.ToString("0.##")" />
+                        </div>
+                        <button onclick="quickRestock(@item.ProductId, '@item.ProductName', 'restock_all_@item.ProductId')" 
+                                class="restock-btn-hover" 
+                                style="background: var(--primary-color); color: white; border: none; height: 32px; padding: 0 0.8rem; border-radius: 8px; font-size: 0.7rem; font-weight: 900; cursor: pointer; white-space: nowrap; transition: all 0.2s ease;">
+                            <i class="fas fa-plus"></i> Restock
+                        </button>
+                    </div>
+                </div>
+                <div style="width: 14px; height: 100px; background: #F3F4F6; border-radius: 10px; overflow: hidden; display: flex; flex-direction: column-reverse; align-self: center;">
+                    <div style="height: @(percent)%; background: @barColor; border-radius: 10px; transition: height 1s ease-out; box-shadow: 0 0 10px @(barColor)44;"></div>
+                </div>
+                <div style="position: absolute; top: 1rem; right: 1rem; padding: 0.25rem 0.6rem; border-radius: 8px; font-size: 0.6rem; font-weight: 900; background: @bgColor; color: @barColor; text-transform: uppercase; letter-spacing: 0.05em;">
+                    @statusLabel
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Stock Life Cycle Analysis -->
+<div class="glass-card" style="margin-bottom: 2.5rem; padding: 1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <div>
+            <h3 style="font-size: 1.25rem; font-weight: 900; color: #1F2937; margin-bottom: 0.25rem;">Stock Life Cycle Analysis</h3>
+            <p style="color: #9CA3AF; font-size: 0.8rem; font-weight: 600;">Monitor stock depletion and restock spikes over time</p>
+        </div>
+        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+            <!-- Category Filter -->
+            <select id="stockCategoryFilter" class="period-btn" style="outline: none; cursor: pointer; border: 1px solid #E5E7EB; padding: 0.5rem 1rem;">
+                <option value="all">All Categories</option>
+                @foreach (var cat in Model.CategoryData.Select(c => c.CategoryName))
+                {
+                    <option value="@cat">@cat</option>
+                }
+            </select>
+            
+            <!-- Specific Product Filter -->
+            <select id="stockProductFilter" class="period-btn" style="outline: none; cursor: pointer; border: 1px solid #E5E7EB; padding: 0.5rem 1rem; min-width: 150px;">
+                <option value="">Select Product</option>
+                @foreach (var product in Model.StockSummary.AllStockItems.Take(10))
+                {
+                    <option value="@product.ProductName">@product.ProductName</option>
+                }
+            </select>
+
+            <!-- Date Range -->
+            <div style="display: flex; align-items: center; gap: 0.5rem; background: #F9FAFB; padding: 0.25rem 0.75rem; border-radius: 12px; border: 1px solid #E5E7EB;">
+                <input type="date" id="stockStartDate" class="period-btn" style="border:none; background:transparent; padding:0;" value="@DateTime.Now.AddDays(-14).ToString("yyyy-MM-dd")" />
+                <span style="color: #9CA3AF; font-weight: 900;">→</span>
+                <input type="date" id="stockEndDate" class="period-btn" style="border:none; background:transparent; padding:0;" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+            </div>
+
+            <button onclick="updateStockLifeCycle()" class="period-btn active" style="padding: 0.5rem 1.25rem;">
+                <i class="fas fa-sync-alt"></i> Analyze
+            </button>
+        </div>
+    </div>
+
+    <div style="height: 350px; width: 100%; position: relative;">
+        <canvas id="stockLifeCycleChart"></canvas>
+    </div>
+    
+    <div style="margin-top: 1.5rem; display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap;" id="stockLegend">
+        <!-- JS will populate legend -->
+    </div>
+</div>
+
+<div class="dashboard-grid-bottom">
     <div class="glass-card" style="height: 480px; display: flex; flex-direction: column;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2rem;">
             <div>
@@ -149,8 +486,8 @@
         <h3 style="font-size: 1.25rem; font-weight: 900; color: #1F2937; margin-bottom: 0.25rem;">Market Share</h3>
         <p style="color: #9CA3AF; font-size: 0.8rem; font-weight: 600; margin-bottom: 2rem;">Revenue by category</p>
         
-        <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
-            <div style="height: 220px; display: flex; align-items: center; justify-content: center; position: relative;">
+        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; position: relative;">
+            <div style="height: 240px; display: flex; align-items: center; justify-content: center; position: relative;">
                 <canvas id="categoryChart"></canvas>
                 <div style="position: absolute; text-align: center; pointer-events: none; top: 50%; left: 50%; transform: translate(-50%, -50%);">
                     <div style="font-size: 0.65rem; font-weight: 800; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.05em;">Market</div>
@@ -158,70 +495,81 @@
                 </div>
             </div>
             
-            <div id="categoryLegend" style="margin-top: 1.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; max-height: 120px; overflow-y: auto; padding-right: 5px;">
+            <div id="categoryLegend" style="margin-top: 1.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; max-height: 120px; overflow-y: auto;">
                 <!-- Legend items will be injected by JS -->
             </div>
         </div>
     </div>
 </div>
 
-<div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 2.5rem;">
-    <!-- Top Selling Dishes -->
-    <div class="glass-card">
+<div class="dashboard-grid-bottom">
+    <!-- Top Selling Dishes Grouped by Category -->
+    <div class="glass-card" style="padding: 1.5rem;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2rem;">
             <div>
                 <h3 style="font-size: 1.25rem; font-weight: 900; color: #1F2937; margin-bottom: 0.25rem;">Best Selling Signatures</h3>
-                <p style="color: #9CA3AF; font-size: 0.8rem; font-weight: 600;">Dishes that drive your business</p>
+                <p style="color: #9CA3AF; font-size: 0.8rem; font-weight: 600;">Performance breakdown grouped by category</p>
             </div>
-            <div style="width: 40px; height: 40px; border-radius: 12px; background: #FFF7ED; color: #F97316; display: flex; align-items: center; justify-content: center;">
-                <i class="fas fa-award"></i>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <select onchange="filterBestSellers(this.value)" class="period-btn" style="outline: none; cursor: pointer; border: 1px solid var(--primary-color); color: var(--primary-color); padding: 0.5rem 1.5rem;">
+                    <option value="all">All Categories</option>
+                    @foreach (var cat in Model.TopProducts.Select(p => p.Category).Distinct())
+                    {
+                        <option value="@cat">@cat</option>
+                    }
+                </select>
+                <div style="width: 40px; height: 40px; border-radius: 12px; background: #FFF7ED; color: #F97316; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-award"></i>
+                </div>
             </div>
         </div>
 
-        @{ int rank = 0; }
-        @foreach (var item in Model.TopProducts)
-        {
-            rank++;
-            <div class="top-dish-card">
-                <div style="display:flex; align-items:center; gap: 1.5rem; flex: 1;">
-                    <div style="position: relative;">
-                        <div style="width:60px; height:60px; border-radius:16px; background:#F3F4F6; overflow:hidden; border: 2px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
-                            @if (!string.IsNullOrEmpty(item.ImageUrl))
-                            {
-                                <img src="@item.ImageUrl" style="width:100%; height:100%; object-fit:cover;" />
-                            }
-                            else
-                            {
-                                <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color: var(--primary-color); font-weight: 900;">@item.ProductName[0]</div>
-                            }
-                        </div>
+        <div id="best-sellers-container" class="radar-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+            @{ int rank = 0; }
+            @foreach (var item in Model.TopProducts)
+            {
+                rank++;
+                <div class="best-seller-item" data-category="@item.Category">
+                    <div class="top-dish-card" style="margin-bottom: 0; padding: 1rem; display: flex; flex-direction: column; align-items: flex-start; gap: 0.75rem; background: white; border: 1px solid #F3F4F6; transition: all 0.3s ease; position: relative; overflow: visible; border-radius: 20px; height: 100%;">
+                        <!-- Flame Icon for Top 3 Overall -->
                         @if (rank <= 3)
                         {
-                            <div style="position: absolute; top: -10px; right: -10px;">
-                                <i class="fas fa-fire flame-@rank"></i>
+                            <div style="position: absolute; top: -8px; right: -8px; z-index: 10;">
+                                <i class="fas fa-fire" style="color: @(rank == 1 ? "#EF4444" : rank == 2 ? "#F59E0B" : "#FBBF24"); font-size: 1.2rem; filter: drop-shadow(0 0 5px @(rank == 1 ? "rgba(239, 68, 68, 0.5)" : "rgba(245, 158, 11, 0.3)"));"></i>
                             </div>
                         }
-                    </div>
-                    <div>
-                        <div style="font-weight: 900; color: #1F2937; font-size: 1rem;">@item.ProductName</div>
-                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.25rem;">
-                            <span style="padding: 0.2rem 0.5rem; background: @(rank == 1 ? "rgba(45, 159, 150, 0.1)" : "#F3F4F6"); color: @(rank == 1 ? "var(--primary-color)" : "#9CA3AF"); border-radius: 6px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase;">@item.Category</span>
-                            <span style="font-size: 0.8rem; color: #9CA3AF; font-weight: 600;">@item.QuantitySold Sold</span>
+
+                        <div style="display:flex; align-items:center; gap: 1rem; width: 100%;">
+                            <div style="width:56px; height:56px; border-radius:14px; background:#F9FAFB; overflow:hidden; border: 2px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.05); flex-shrink: 0;">
+                                @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                {
+                                    <img src="@item.ImageUrl" style="width:100%; height:100%; object-fit:cover;" />
+                                }
+                                else
+                                {
+                                    <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color: var(--primary-color); font-weight: 900;">@item.ProductName[0]</div>
+                                }
+                            </div>
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="font-weight: 900; color: #1F2937; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">@item.ProductName</div>
+                                <div style="font-size: 0.65rem; color: var(--primary-color); font-weight: 800; text-transform: uppercase; background: var(--primary-light); padding: 0.1rem 0.4rem; border-radius: 4px; display: inline-block;">@item.Category</div>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding-top: 0.75rem; border-top: 1px dashed #E5E7EB; margin-top: auto;">
+                            <div style="font-weight: 900; color: #1F2937; font-size: 1rem;">₱@item.TotalRevenue.ToString("N2")</div>
+                            <div style="font-size: 0.7rem; color: #10B981; font-weight: 800; background: #ECFDF5; padding: 0.2rem 0.5rem; border-radius: 6px;">
+                                @item.QuantitySold Sold
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div style="text-align: right;">
-                    <div style="font-weight: 900; color: #1F2937; font-size: 1.1rem;">₱@item.TotalRevenue.ToString("N2")</div>
-                    <div style="font-size: 0.75rem; color: @(item.GrowthPercentage >= 0 ? "#10B981" : "#EF4444"); font-weight: 800; margin-top: 0.25rem;">
-                        @(item.GrowthPercentage >= 0 ? "+" : "")@item.GrowthPercentage%
-                    </div>
-                </div>
-            </div>
-        }
+            }
+        </div>
     </div>
 
     <!-- AI Intelligence -->
-    <div class="glass-card" style="background: #111827; border: none; color: white; display: flex; flex-direction: column;">
+    <div class="glass-card" style="background: linear-gradient(135deg, #064E3B 0%, #022C22 100%); border: 1px solid rgba(45, 159, 150, 0.2); color: white; display: flex; flex-direction: column; box-shadow: 0 10px 30px -10px rgba(6, 78, 59, 0.5);">
         <div style="display:flex; align-items:center; gap: 1.25rem; margin-bottom: 2.5rem;">
             <div style="width:56px; height:56px; border-radius:18px; background:rgba(45, 159, 150, 0.2); color:var(--primary-color); display:flex; align-items:center; justify-content:center; font-size:1.75rem;">
                 <i class="fas fa-magic"></i>
@@ -270,6 +618,51 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        function updateDashboardFilter(source) {
+            const monthPicker = document.getElementById('consumptionMonthPicker');
+            const yearPicker = document.getElementById('trendYearPicker');
+            
+            let [selectedYear, selectedMonth] = monthPicker.value.split('-');
+            
+            // If year picker was the source, sync the month picker's year
+            if (source === 'year') {
+                selectedYear = yearPicker.value;
+            }
+            
+            let url = new URL(window.location.href);
+            url.searchParams.set('month', selectedMonth);
+            url.searchParams.set('year', selectedYear);
+            
+            window.location.href = url.toString();
+        }
+
+        function filterBestSellers(category) {
+            const items = document.querySelectorAll('.best-seller-item');
+            items.forEach(item => {
+                if (category === 'all' || item.getAttribute('data-category') === category) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function toggleStockView(view) {
+            const lowGrid = document.getElementById('radar-grid-low');
+            const allGrid = document.getElementById('radar-grid-all');
+            const badge = document.getElementById('low-stock-badge');
+
+            if (view === 'low') {
+                lowGrid.style.display = 'grid';
+                allGrid.style.display = 'none';
+                badge.style.display = 'inline-block';
+            } else {
+                lowGrid.style.display = 'none';
+                allGrid.style.display = 'grid';
+                badge.style.display = 'none';
+            }
+        }
+
         // ── Revenue Chart with AI Forecast ──
         const ctx = document.getElementById('salesChart').getContext('2d');
         
@@ -288,9 +681,19 @@
         forecastDataset.push(historicalData[historicalData.length - 1]);
         forecastDataset.push(...forecastData);
 
+        // Theme Integration
+        const style = getComputedStyle(document.documentElement);
+        const primaryColor = style.getPropertyValue('--primary-color').trim() || '#2D9F96';
+        
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '45, 159, 150';
+        }
+        const primaryRGB = hexToRgb(primaryColor);
+
         const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-        gradient.addColorStop(0, 'rgba(45, 159, 150, 0.4)');
-        gradient.addColorStop(1, 'rgba(45, 159, 150, 0)');
+        gradient.addColorStop(0, `rgba(${primaryRGB}, 0.3)`);
+        gradient.addColorStop(1, `rgba(${primaryRGB}, 0)`);
 
         new Chart(ctx, {
             type: 'line',
@@ -300,12 +703,12 @@
                     {
                         label: 'Actual Revenue',
                         data: historicalData,
-                        borderColor: '#2D9F96',
+                        borderColor: primaryColor,
                         backgroundColor: gradient,
                         fill: true,
                         tension: 0.45,
                         pointRadius: 4,
-                        pointBackgroundColor: '#2D9F96',
+                        pointBackgroundColor: primaryColor,
                         pointBorderColor: 'white',
                         pointBorderWidth: 3,
                         borderWidth: 4,
@@ -314,16 +717,16 @@
                     {
                         label: 'AI Forecast',
                         data: forecastDataset,
-                        borderColor: '#9CA3AF',
-                        borderDash: [5, 5],
+                        borderColor: primaryColor,
+                        borderDash: [8, 4],
+                        borderWidth: 3,
+                        pointRadius: 3,
+                        pointBackgroundColor: 'white',
+                        pointBorderColor: primaryColor,
+                        pointBorderWidth: 2,
+                        tension: 0.45,
                         backgroundColor: 'transparent',
                         fill: false,
-                        tension: 0.45,
-                        pointRadius: 4,
-                        pointBackgroundColor: '#9CA3AF',
-                        pointBorderColor: 'white',
-                        pointBorderWidth: 2,
-                        borderWidth: 3,
                         z: 5
                     }
                 ]
@@ -336,7 +739,12 @@
                         display: true, 
                         position: 'top', 
                         align: 'end',
-                        labels: { usePointStyle: true, boxWidth: 6, font: { weight: '800', size: 10 } } 
+                        labels: { 
+                            usePointStyle: true, 
+                            boxWidth: 6, 
+                            font: { weight: '800', size: 11, family: 'Inter' },
+                            padding: 20
+                        } 
                     } 
                 },
                 scales: {
@@ -356,9 +764,13 @@
 
         // ── Category Chart ──
         const catCtx = document.getElementById('categoryChart').getContext('2d');
-        const catLabels = @Html.Raw(Json.Serialize(Model.CategoryData.Select(c => c.CategoryName)));
-        const catValues = @Html.Raw(Json.Serialize(Model.CategoryData.Select(c => c.Revenue)));
-        const palette = ['#2D9F96', '#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981'];
+        
+        // Correctly serialize and sort data for staircase effect (Lowest to Highest)
+        const rawData = @Html.Raw(Json.Serialize(Model.CategoryData));
+        const sortedData = [...rawData].sort((a, b) => (a.revenue || a.Revenue) - (b.revenue || b.Revenue));
+        const catLabels = sortedData.map(c => c.categoryName || c.CategoryName);
+        const catValues = sortedData.map(c => c.revenue || c.Revenue);
+        const palette = ['#10B981', '#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B', '#2D9F96'];
 
         new Chart(catCtx, {
             type: 'doughnut',
@@ -367,20 +779,43 @@
                 datasets: [{
                     data: catValues,
                     backgroundColor: palette,
-                    borderWidth: 8,
+                    borderWidth: 4,
                     borderColor: 'white',
-                    hoverOffset: 20
+                    hoverOffset: 12,
+                    borderRadius: 8,
+                    spacing: 4
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                cutout: '80%',
+                cutout: '75%',
                 plugins: {
-                    legend: { display: false }
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        titleColor: '#1F2937',
+                        bodyColor: '#4B5563',
+                        borderColor: '#E5E7EB',
+                        borderWidth: 1,
+                        padding: 12,
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ₱' + context.parsed.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                animation: {
+                    animateRotate: true,
+                    animateScale: true,
+                    duration: 1000,
+                    easing: 'easeOutQuart'
                 }
             }
         });
+
+
 
         // Inject Custom Legend with Percentages
         const legendContainer = document.getElementById('categoryLegend');
@@ -406,5 +841,351 @@
             `;
             legendContainer.appendChild(item);
         });
+
+        // ── Inventory Usage Chart ──
+        const invCtx = document.getElementById('inventoryUsageChart').getContext('2d');
+        const usageData = @Html.Raw(Json.Serialize(Model.StockSummary.MonthlyWeeklyUsage));
+        const usageLabels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+
+        const usageGradient = invCtx.createLinearGradient(0, 0, 0, 180);
+        usageGradient.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
+        usageGradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+
+        new Chart(invCtx, {
+            type: 'line',
+            data: {
+                labels: usageLabels,
+                datasets: [{
+                    label: 'Stock Units Sold',
+                    data: usageData,
+                    borderColor: '#3B82F6',
+                    backgroundColor: usageGradient,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointBackgroundColor: 'white',
+                    pointBorderColor: '#3B82F6',
+                    pointBorderWidth: 2,
+                    borderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { color: '#F3F4F6', drawBorder: false },
+                        ticks: { font: { weight: '600' }, color: '#9CA3AF', padding: 10 }
+                    },
+                    x: { 
+                        grid: { display: false },
+                        ticks: { font: { weight: '600' }, color: '#9CA3AF', padding: 10 }
+                    }
+                }
+            }
+        });
+
+        // ── Yearly Usage Chart (Now Line Chart for Trend Consistency) ──
+        const yearCtx = document.getElementById('yearlyUsageChart').getContext('2d');
+        const yearlyData = @Html.Raw(Json.Serialize(Model.StockSummary.YearlyMonthlyTrend));
+        
+        const yearGradient = yearCtx.createLinearGradient(0, 0, 0, 250);
+        yearGradient.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
+        yearGradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+
+        new Chart(yearCtx, {
+            type: 'line',
+            data: {
+                labels: yearlyData.map(d => d.timeLabel),
+                datasets: [{
+                    label: 'Items Sold',
+                    data: yearlyData.map(d => d.orderCount),
+                    borderColor: '#3B82F6',
+                    backgroundColor: yearGradient,
+                    fill: true,
+                    tension: 0.45,
+                    borderWidth: 4,
+                    pointRadius: 5,
+                    pointBackgroundColor: '#3B82F6',
+                    pointBorderColor: 'white',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1F2937',
+                        titleFont: { weight: '800' },
+                        padding: 12,
+                        cornerRadius: 10
+                    }
+                },
+                scales: {
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { color: '#F3F4F6', drawBorder: false },
+                        ticks: { font: { weight: '600' }, color: '#9CA3AF', padding: 10 }
+                    },
+                    x: { 
+                        grid: { display: false },
+                        ticks: { font: { weight: '600' }, color: '#9CA3AF', padding: 10 }
+                    }
+                }
+            }
+        });
+
+        // ── Stock Life Cycle Analysis Chart ──
+        const stockCtx = document.getElementById('stockLifeCycleChart').getContext('2d');
+        const stockLifeCycleData = @Html.Raw(Json.Serialize(Model.StockLifeCycle));
+        
+        let stockChart;
+
+        function initStockChart(data) {
+            if (!data || !data.series) return;
+
+            const datasets = data.series.map(s => ({
+                label: s.productName,
+                data: s.points.map(p => p.stockLevel),
+                borderColor: s.color,
+                backgroundColor: s.color + '11',
+                borderWidth: 3,
+                tension: 0, 
+                fill: true,
+                pointRadius: s.points.map(p => p.isRestock ? 6 : 2),
+                pointBackgroundColor: s.points.map(p => p.isRestock ? '#EF4444' : s.color),
+                pointStyle: s.points.map(p => p.isRestock ? 'rectRot' : 'circle'),
+                stepped: false
+            }));
+
+            if (stockChart) stockChart.destroy();
+
+            stockChart = new Chart(stockCtx, {
+                type: 'line',
+                data: {
+                    labels: data.allLabels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1F2937',
+                            padding: 12,
+                            cornerRadius: 10,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) label += ': ';
+                                    label += context.parsed.y + ' units';
+                                    const point = data.series[context.datasetIndex].points[context.dataIndex];
+                                    if (point.isRestock) label += ' ⚡ RESTOCKED';
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            max: 600,
+                            grid: { color: '#F3F4F6', drawBorder: false },
+                            ticks: { font: { weight: '600' }, color: '#9CA3AF', padding: 10 }
+                        },
+                        x: { 
+                            grid: { display: false },
+                            ticks: { font: { weight: '600' }, color: '#9CA3AF', padding: 10 }
+                        }
+                    }
+                }
+            });
+
+            const legend = document.getElementById('stockLegend');
+            legend.innerHTML = '';
+            data.series.forEach(s => {
+                const item = document.createElement('div');
+                item.style.cssText = 'display:flex; align-items:center; gap:0.5rem; padding:0.4rem 1rem; background:white; border:1px solid #E5E7EB; border-radius:10px; cursor:pointer;';
+                item.innerHTML = `
+                    <div style="width:10px; height:10px; border-radius:50%; background:${s.color}"></div>
+                    <span style="font-size:0.75rem; font-weight:800; color:#4B5563;">${s.productName}</span>
+                `;
+                legend.appendChild(item);
+            });
+        }
+
+        initStockChart(stockLifeCycleData);
+
+        async function updateStockLifeCycle() {
+            const category = document.getElementById('stockCategoryFilter').value;
+            const productName = document.getElementById('stockProductFilter').value;
+            const start = document.getElementById('stockStartDate').value;
+            const end = document.getElementById('stockEndDate').value;
+
+            try {
+                const response = await fetch(`/Admin/GetStockLifeCycle?category=${category === 'all' ? '' : category}&productName=${productName}&startDate=${start}&endDate=${end}`);
+                const data = await response.json();
+                initStockChart(data);
+            } catch (err) {
+                console.error("Failed to update stock life cycle:", err);
+            }
+        }
+
+        async function quickRestock(productId, productName, inputId) {
+            const qtyInput = document.getElementById(inputId);
+            const qty = parseFloat(qtyInput.value);
+
+            if (isNaN(qty) || qty <= 0) {
+                alert("Please enter a valid quantity.");
+                return;
+            }
+
+            if (!confirm(`Confirm Restock: Add ${qty} units to ${productName}?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/Admin/RestockProduct', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `productId=${productId}&quantity=${qty}`
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText || `Server error (${response.status})`);
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Update UI immediately or reload
+                    window.location.reload();
+                } else {
+                    alert("Restock failed: " + result.message);
+                }
+            } catch (err) {
+                console.error("Restock request failed:", err);
+                alert("System error during restock. Please try again.");
+            }
+        }
+        async function handleBulkImport(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const statusDiv = document.getElementById('importStatus');
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+
+            statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing file...';
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch('/Admin/ImportProducts', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    statusDiv.innerHTML = `<span style="color:#10B981"><i class="fas fa-check-circle"></i> ${result.message}</span>`;
+                    setTimeout(() => window.location.reload(), 2000);
+                } else {
+                    statusDiv.innerHTML = `<span style="color:#EF4444"><i class="fas fa-exclamation-circle"></i> ${result.message}</span>`;
+                    submitBtn.disabled = false;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<span style="color:#EF4444"><i class="fas fa-exclamation-circle"></i> Error: ${error.message}</span>`;
+                submitBtn.disabled = false;
+            }
+        }
     </script>
+
+    <!-- Bulk Import Modal -->
+    <div id="importModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(8px);">
+        <div style="background:white; padding:2.5rem; border-radius:32px; width:100%; max-width:550px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25); position:relative; animation: modalSlideUp 0.3s ease-out;">
+            <style>
+                @@keyframes modalSlideUp {
+                    from { transform: translateY(20px); opacity: 0; }
+                    to { transform: translateY(0); opacity: 1; }
+                }
+            </style>
+            <button onclick="document.getElementById('importModal').style.display='none'" style="position:absolute; top:1.5rem; right:1.5rem; border:none; background:#F3F4F6; width:36px; height:36px; border-radius:50%; font-size:1.2rem; cursor:pointer; color:#6B7280; display:flex; align-items:center; justify-content:center; transition: all 0.2s;" onmouseover="this.style.background='#E5E7EB'" onmouseout="this.style.background='#F3F4F6'">&times;</button>
+            
+            <div style="text-align:center; margin-bottom:2rem;">
+                <div style="width:64px; height:64px; background:var(--primary-light); color:var(--primary-color); border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:2rem; margin:0 auto 1rem;">
+                    <i class="fas fa-file-excel"></i>
+                </div>
+                <h2 style="margin:0; color:#111827; font-weight:900; font-size:1.5rem;">Bulk Product Import</h2>
+                <p style="color:#6B7280; font-size:0.9rem; margin-top:0.5rem;">Upload Excel (.xlsx) or CSV to manage products</p>
+                <a href="/Admin/DownloadTemplate" style="display:inline-flex; align-items:center; gap:0.5rem; color:var(--primary-color); text-decoration:none; font-weight:800; font-size:0.85rem; margin-top:0.75rem; padding:0.5rem 1rem; background:var(--primary-light); border-radius:10px; transition:all 0.2s;" onmouseover="this.style.background='#d1f1ee'" onmouseout="this.style.background='var(--primary-light)'">
+                    <i class="fas fa-download"></i> Download Excel Template
+                </a>
+            </div>
+            
+            <form onsubmit="handleBulkImport(event)" enctype="multipart/form-data">
+                <div style="margin-bottom: 1.5rem; display: flex; gap: 1rem; background: #F3F4F6; padding: 0.5rem; border-radius: 16px;">
+                    <label style="flex: 1; cursor: pointer;">
+                        <input type="radio" name="mode" value="add" checked style="display:none;" onchange="updateModeStyle(this)">
+                        <div class="mode-tab active" id="mode-add" style="text-align:center; padding:0.75rem; border-radius:12px; font-size:0.85rem; font-weight:800; transition:all 0.2s;">
+                            <i class="fas fa-plus-circle"></i> Add / Update
+                        </div>
+                    </label>
+                    <label style="flex: 1; cursor: pointer;">
+                        <input type="radio" name="mode" value="replace" style="display:none;" onchange="updateModeStyle(this)">
+                        <div class="mode-tab" id="mode-replace" style="text-align:center; padding:0.75rem; border-radius:12px; font-size:0.85rem; font-weight:800; transition:all 0.2s; color:#6B7280;">
+                            <i class="fas fa-sync-alt"></i> Replace All
+                        </div>
+                    </label>
+                </div>
+
+                <div id="replaceWarning" style="display:none; background:#FFF7ED; border:1px solid #FFEDD5; border-radius:12px; padding:1rem; margin-bottom:1.5rem; color:#9A3412; font-size:0.8rem; font-weight:700;">
+                    <i class="fas fa-exclamation-triangle"></i> WARNING: 'Replace All' will remove existing products (without sales history) and replace them with the Excel content.
+                </div>
+
+                <div style="border:2px dashed #E5E7EB; border-radius:24px; padding:2rem; text-align:center; margin-bottom:1.5rem; cursor:pointer; transition:all 0.2s; background:#F9FAFB;" 
+                     onmouseover="this.style.borderColor='var(--primary-color)'; this.style.background='#f0f9f8'" 
+                     onmouseout="this.style.borderColor='#E5E7EB'; this.style.background='#F9FAFB'">
+                    <input type="file" name="excelFile" accept=".xlsx,.xls,.csv" required style="display:none;" id="excelInput" onchange="document.getElementById('fileNameDisplay').innerText = this.files[0].name; document.getElementById('uploadIcon').style.color='var(--primary-color)'">
+                    <label for="excelInput" style="cursor:pointer; display:block;">
+                        <i id="uploadIcon" class="fas fa-cloud-upload-alt" style="font-size:2.5rem; color:#D1D5DB; margin-bottom:0.75rem; display:block; transition:color 0.2s;"></i>
+                        <span id="fileNameDisplay" style="color:#374151; font-weight:700; font-size:0.95rem; display:block;">Click to select file</span>
+                        <span style="color:#9CA3AF; font-size:0.75rem; margin-top:0.4rem; display:block;">Supported: XLSX, XLS, CSV</span>
+                    </label>
+                </div>
+
+                <style>
+                    .mode-tab.active { background: white; color: var(--primary-color); shadow: 0 4px 6px rgba(0,0,0,0.05); }
+                </style>
+
+                <script>
+                    function updateModeStyle(radio) {
+                        document.querySelectorAll('.mode-tab').forEach(el => {
+                            el.classList.remove('active');
+                            el.style.color = '#6B7280';
+                            el.style.background = 'transparent';
+                        });
+                        const tab = document.getElementById('mode-' + radio.value);
+                        tab.classList.add('active');
+                        tab.style.color = radio.value === 'replace' ? '#EF4444' : 'var(--primary-color)';
+                        tab.style.background = 'white';
+                        document.getElementById('replaceWarning').style.display = radio.value === 'replace' ? 'block' : 'none';
+                    }
+                </script>
+                
+                <div id="importStatus" style="margin-bottom:1.5rem; font-size:0.9rem; font-weight:700; text-align:center; min-height:1.2rem;"></div>
+
+                <div style="display:flex; gap:1rem;">
+                    <button type="button" onclick="document.getElementById('importModal').style.display='none'" style="flex:1; padding:1rem; border-radius:16px; border:1px solid #E5E7EB; background:white; color:#374151; font-weight:800; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='#F9FAFB'">Cancel</button>
+                    <button type="submit" style="flex:1; padding:1rem; border-radius:16px; border:none; background:var(--primary-color); color:white; font-weight:800; cursor:pointer; box-shadow:0 10px 15px -3px rgba(45, 159, 150, 0.3); transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">Process Import</button>
+                </div>
+            </form>
+        </div>
+    </div>
 }

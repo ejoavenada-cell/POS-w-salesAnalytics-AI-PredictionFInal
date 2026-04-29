@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "ZZgY8Hdl/DQ=",
+  "dgSpecHash": "jz6v3mrxWkU=",
   "success": true,
   "projectFilePath": "C:\\Users\\IAI-TS\\source\\repos\\AI_Website\\FoodOrderingSytemAIAnalytics\\FoodOrderingSytemAIAnalytics.csproj",
   "expectedPackageFiles": [
@@ -39,6 +39,7 @@
     "C:\\Users\\IAI-TS\\.nuget\\packages\\microsoft.identitymodel.tokens\\7.7.1\\microsoft.identitymodel.tokens.7.7.1.nupkg.sha512",
     "C:\\Users\\IAI-TS\\.nuget\\packages\\microsoft.net.stringtools\\17.14.28\\microsoft.net.stringtools.17.14.28.nupkg.sha512",
     "C:\\Users\\IAI-TS\\.nuget\\packages\\microsoft.sqlserver.server\\1.0.0\\microsoft.sqlserver.server.1.0.0.nupkg.sha512",
+    "C:\\Users\\IAI-TS\\.nuget\\packages\\miniexcel\\1.43.1\\miniexcel.1.43.1.nupkg.sha512",
     "C:\\Users\\IAI-TS\\.nuget\\packages\\mono.texttemplating\\3.0.0\\mono.texttemplating.3.0.0.nupkg.sha512",
     "C:\\Users\\IAI-TS\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512",
     "C:\\Users\\IAI-TS\\.nuget\\packages\\system.clientmodel\\1.5.1\\system.clientmodel.1.5.1.nupkg.sha512",

@@ -21,32 +21,53 @@
         <button type="submit" class="btn-primary" style="width: auto;">Filter</button>
     </form>
 
-    <table class="table" style="width: 100%; border-collapse: collapse;">
+    <table class="table" style="width: 100%; border-collapse: collapse; table-layout: fixed;">
         <thead>
-            <tr style="text-align: left; border-bottom: 2px solid var(--border-color);">
-                <th style="padding: 1rem;">Code</th>
-                <th style="padding: 1rem;">Name</th>
-                <th style="padding: 1rem;">Category</th>
-                <th style="padding: 1rem;">Price</th>
-                <th style="padding: 1rem;">Stock</th>
-                <th style="padding: 1rem;">Actions</th>
+            <tr style="text-align: left; border-bottom: 2px solid var(--border-color); color: #6B7280; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                <th style="padding: 1rem 0.5rem; width: 80px;">Code</th>
+                <th style="padding: 1rem 0.5rem; width: 60px;">Photo</th>
+                <th style="padding: 1rem 0.5rem;">Product Name</th>
+                <th style="padding: 1rem 0.5rem; width: 120px;">Category</th>
+                <th style="padding: 1rem 0.5rem; width: 100px;">Price</th>
+                <th style="padding: 1rem 0.5rem; width: 110px;">Stock</th>
+                <th style="padding: 1rem 0.5rem; width: 100px;">Actions</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var item in Model)
             {
-                <tr style="border-bottom: 1px solid var(--border-color);">
-                    <td style="padding: 1rem;">@item.Code</td>
-                    <td style="padding: 1rem;">@item.Name</td>
-                    <td style="padding: 1rem;">@item.Category</td>
-                    <td style="padding: 1rem;">₱@item.Price.ToString("N2")</td>
-                    <td style="padding: 1rem;">
-                        @item.Stock
-                        <button onclick="restock(@item.Id, '@item.Name')" style="border: none; background: none; color: var(--secondary-color); cursor: pointer;"><i class="fa fa-plus-circle"></i></button>
+                <tr style="border-bottom: 1px solid #F3F4F6; transition: background 0.2s;" onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background='transparent'">
+                    <td style="padding: 1rem 0.5rem; font-family: monospace; font-size: 0.8rem; color: #9CA3AF;">@item.Code</td>
+                    <td style="padding: 1rem 0.5rem;">
+                        <div style="width: 45px; height: 45px; border-radius: 10px; background: #F3F4F6; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #E5E7EB;">
+                            @if (!string.IsNullOrEmpty(item.ImageUrl))
+                            {
+                                <img src="@item.ImageUrl" style="width: 100%; height: 100%; object-fit: cover;" />
+                            }
+                            else
+                            {
+                                <span style="font-size: 1.2rem;">🍔</span>
+                            }
+                        </div>
                     </td>
-                    <td style="padding: 1rem;">
-                        <a asp-action="Edit" asp-route-id="@item.Id" style="color: var(--secondary-color); margin-right: 1rem;"><i class="fa fa-edit"></i></a>
-                        <a href="javascript:void(0)" onclick="confirmDelete(@item.Id, '@item.Name')" style="color: var(--accent-color);"><i class="fa fa-trash"></i></a>
+                    <td style="padding: 1rem 0.5rem; font-weight: 700; color: #111827;">@item.Name</td>
+                    <td style="padding: 1rem 0.5rem;">
+                        <span style="padding: 0.25rem 0.75rem; border-radius: 20px; background: #EEF2FF; color: #4F46E5; font-size: 0.7rem; font-weight: 700; display: inline-block;">@item.Category</span>
+                    </td>
+                    <td style="padding: 1rem 0.5rem; font-weight: 800; color: #111827;">₱@item.Price.ToString("N2")</td>
+                    <td style="padding: 1rem 0.5rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="font-weight: 700; @(item.Stock < 20 ? "color: #EF4444;" : "color: #10B981;")">@item.Stock</span>
+                            <button onclick="restock(@item.Id, '@item.Name')" title="Restock" style="border: none; background: #F3F4F6; color: #4B5563; width: 24px; height: 24px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;">
+                                <i class="fa fa-plus"></i>
+                            </button>
+                        </div>
+                    </td>
+                    <td style="padding: 1rem 0.5rem;">
+                        <div style="display: flex; gap: 0.5rem;">
+                            <a asp-action="Edit" asp-route-id="@item.Id" style="width: 32px; height: 32px; border-radius: 8px; background: #EEF2FF; color: #4F46E5; display: flex; align-items: center; justify-content: center;"><i class="fa fa-edit"></i></a>
+                            <a href="javascript:void(0)" onclick="confirmDelete(@item.Id, '@item.Name')" style="width: 32px; height: 32px; border-radius: 8px; background: #FEF2F2; color: #EF4444; display: flex; align-items: center; justify-content: center;"><i class="fa fa-trash"></i></a>
+                        </div>
                     </td>
                 </tr>
             }

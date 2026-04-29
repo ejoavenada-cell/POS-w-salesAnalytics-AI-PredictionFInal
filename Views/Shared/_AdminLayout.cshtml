@@ -12,33 +12,29 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="~/js/theme.js"></script>
+    <style>
+        :root {
+            --primary-color: @settings.PrimaryColor;
+            --pos-primary: @settings.PrimaryColor;
+            --primary-light: @(settings.PrimaryColor + "22");
+        }
+    </style>
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
     <div class="pos-wrapper">
         <!-- ═══ Slim Sidebar ═══ -->
         <aside class="pos-sidebar">
-            <div class="sidebar-brand" style="overflow: hidden;">
+            <div class="sidebar-logo-section">
                 @if (!string.IsNullOrEmpty(settings.LogoUrl))
                 {
-                    <img src="@settings.LogoUrl" style="width: 100%; height: 100%; object-fit: contain;" alt="Logo" />
+                    <img src="@settings.LogoUrl" alt="Logo" class="sidebar-main-logo" />
                 }
                 else
                 {
-                    <span>@(settings.StoreName.Length > 2 ? settings.StoreName.Substring(0, 2).ToUpper() : settings.StoreName.ToUpper())</span>
+                    <div class="sidebar-logo-text">@(settings.StoreName.Length > 2 ? settings.StoreName.Substring(0, 2).ToUpper() : settings.StoreName.ToUpper())</div>
                 }
-            </div>
-
-            <div class="sidebar-profile" style="padding: 1rem; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 1rem;">
-                <div style="position: relative; display: inline-block;">
-                    <img src="@(User.FindFirst("ImageUrl")?.Value ?? $"https://ui-avatars.com/api/?name={User.Identity?.Name}&background=2D9F96&color=fff")" 
-                         style="width: 50px; height: 50px; border-radius: 12px; object-fit: cover; border: 2px solid rgba(255,255,255,0.1);" />
-                    <button onclick="openSelfEditModal()" style="position: absolute; bottom: -5px; right: -5px; width: 20px; height: 20px; border-radius: 50%; background: var(--primary-color); border: 2px solid #111827; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; cursor: pointer;">
-                        <i class="fas fa-pen"></i>
-                    </button>
-                </div>
-                <div style="margin-top: 0.5rem; font-weight: 800; color: white; font-size: 0.7rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">@User.Identity?.Name</div>
-                <div style="font-size: 0.6rem; color: #9CA3AF; font-weight: 700; text-transform: uppercase;">@User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value</div>
             </div>
 
             <nav class="sidebar-nav">
@@ -48,21 +44,33 @@
                 <a href="@Url.Action("History", "Transaction")" class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Transaction" ? "active" : "")">
                     <i class="fas fa-receipt"></i><span>Orders</span>
                 </a>
-                @if (User.IsInRole("Admin"))
-                {
-                    <a href="@Url.Action("Index", "Admin")" class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["Action"]?.ToString() == "Index" ? "active" : "")">
-                        <i class="fas fa-chart-pie"></i><span>Admin</span>
-                    </a>
-                    <a href="@Url.Action("Products", "Admin")" class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["Action"]?.ToString() == "Products" ? "active" : "")">
-                        <i class="fas fa-box"></i><span>Menu</span>
-                    </a>
-                    <a href="@Url.Action("Index", "User")" class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "User" ? "active" : "")">
-                        <i class="fas fa-users"></i><span>Staff</span>
-                    </a>
-                    <a href="@Url.Action("Index", "Settings")" class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Settings" ? "active" : "")">
-                        <i class="fas fa-cog"></i><span>Settings</span>
-                    </a>
+                @{
+                    var isAdmin = User.IsInRole("Admin");
                 }
+                
+                <a href="@(isAdmin ? Url.Action("Index", "Admin") : "javascript:void(0)")" 
+                   class="sidebar-link @(!isAdmin ? "locked-link" : "") @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["Action"]?.ToString() == "Index" ? "active" : "")">
+                    <i class="fas fa-chart-pie"></i><span>Admin</span>
+                    @if (!isAdmin) { <i class="fas fa-lock locked-icon"></i> }
+                </a>
+                
+                <a href="@(isAdmin ? Url.Action("Products", "Admin") : "javascript:void(0)")" 
+                   class="sidebar-link @(!isAdmin ? "locked-link" : "") @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["Action"]?.ToString() == "Products" ? "active" : "")">
+                    <i class="fas fa-box"></i><span>Menu</span>
+                    @if (!isAdmin) { <i class="fas fa-lock locked-icon"></i> }
+                </a>
+                
+                <a href="@(isAdmin ? Url.Action("Index", "User") : "javascript:void(0)")" 
+                   class="sidebar-link @(!isAdmin ? "locked-link" : "") @(ViewContext.RouteData.Values["Controller"]?.ToString() == "User" ? "active" : "")">
+                    <i class="fas fa-users"></i><span>Staff</span>
+                    @if (!isAdmin) { <i class="fas fa-lock locked-icon"></i> }
+                </a>
+                
+                <a href="@(isAdmin ? Url.Action("Index", "Settings") : "javascript:void(0)")" 
+                   class="sidebar-link @(!isAdmin ? "locked-link" : "") @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Settings" ? "active" : "")">
+                    <i class="fas fa-cog"></i><span>Settings</span>
+                    @if (!isAdmin) { <i class="fas fa-lock locked-icon"></i> }
+                </a>
             </nav>
 
             <div class="sidebar-bottom">
@@ -84,8 +92,16 @@
                            value="@(Context.Request.Query["searchTerm"])" />
                 </div>
                 <div class="user-pill">
-                    <img src="@(User.FindFirst("ImageUrl")?.Value ?? $"https://ui-avatars.com/api/?name={User.Identity?.Name}&background=2D9F96&color=fff")" alt="avatar" style="object-fit: cover;" />
-                    <span style="font-weight:700; color:#1F2937; font-size:0.9rem;">@(User.Identity?.Name ?? "Staff")</span>
+                    <div class="user-avatar-wrap">
+                        <img src="@(User.FindFirst("ImageUrl")?.Value ?? $"https://ui-avatars.com/api/?name={User.Identity?.Name}&background=2D9F96&color=fff")" alt="avatar" />
+                        <button onclick="openSelfEditModal()" class="edit-pill-btn">
+                            <i class="fas fa-pen"></i>
+                        </button>
+                    </div>
+                    <div class="user-info">
+                        <span class="user-name">@(User.Identity?.Name ?? "Staff")</span>
+                        <span class="user-role">@User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value</span>
+                    </div>
                 </div>
             </header>
 

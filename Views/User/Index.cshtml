@@ -23,6 +23,7 @@
                     <th style="padding: 1rem; color: #9CA3AF; font-size: 0.75rem; text-transform: uppercase; font-weight: 800;">Role</th>
                     <th style="padding: 1rem; color: #9CA3AF; font-size: 0.75rem; text-transform: uppercase; font-weight: 800;">Age/Sex</th>
                     <th style="padding: 1rem; color: #9CA3AF; font-size: 0.75rem; text-transform: uppercase; font-weight: 800;">Status</th>
+                    <th style="padding: 1rem; color: #9CA3AF; font-size: 0.75rem; text-transform: uppercase; font-weight: 800;">Approval</th>
                     <th style="padding: 1rem; color: #9CA3AF; font-size: 0.75rem; text-transform: uppercase; font-weight: 800;">Joined</th>
                     <th style="padding: 1rem; color: #9CA3AF; font-size: 0.75rem; text-transform: uppercase; font-weight: 800; text-align: right;">Actions</th>
                 </tr>
@@ -64,12 +65,32 @@
                             </div>
                         </td>
                         <td style="padding: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas @(user.IsApproved ? "fa-check-circle" : "fa-clock")" style="color: @(user.IsApproved ? "#10B981" : "#F59E0B");"></i>
+                                <span style="font-weight: 700; color: #4B5563; font-size: 0.85rem;">@(user.IsApproved ? "Approved" : "Pending")</span>
+                            </div>
+                        </td>
+                        <td style="padding: 1rem;">
                             <div style="font-weight: 700; color: #4B5563; font-size: 0.85rem;">@user.DateCreated.ToString("MMM dd, yyyy")</div>
                         </td>
                         <td style="padding: 1rem; border-radius: 0 16px 16px 0; text-align: right;">
-                            <button onclick="openUserModal('@Url.Action("Edit", "User", new { id = user.Id })')" class="btn-checkout" style="width: auto; padding: 0.5rem 1rem; height: 36px; margin-top: 0; font-size: 0.75rem; border-radius: 10px; background: #F3F4F6; color: #4B5563; box-shadow: none;">
-                                <i class="fas fa-edit"></i> Edit
-                            </button>
+                            <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+                                <form asp-action="ToggleApproval" method="post" style="display: inline;">
+                                    <input type="hidden" name="id" value="@user.Id" />
+                                    <button type="submit" class="btn-checkout" title="@(user.IsApproved ? "Revoke Approval" : "Approve User")" style="width: 36px; padding: 0; height: 36px; margin-top: 0; font-size: 0.75rem; border-radius: 10px; background: @(user.IsApproved ? "rgba(239, 68, 68, 0.1)" : "rgba(16, 185, 129, 0.1)"); color: @(user.IsApproved ? "#EF4444" : "#10B981"); box-shadow: none;">
+                                        <i class="fas @(user.IsApproved ? "fa-user-slash" : "fa-user-check")"></i>
+                                    </button>
+                                </form>
+                                <form asp-action="ToggleStatus" method="post" style="display: inline;">
+                                    <input type="hidden" name="id" value="@user.Id" />
+                                    <button type="submit" class="btn-checkout" title="@(user.IsActive ? "Disable Account" : "Enable Account")" style="width: 36px; padding: 0; height: 36px; margin-top: 0; font-size: 0.75rem; border-radius: 10px; background: @(user.IsActive ? "rgba(239, 68, 68, 0.1)" : "rgba(16, 185, 129, 0.1)"); color: @(user.IsActive ? "#EF4444" : "#10B981"); box-shadow: none;">
+                                        <i class="fas @(user.IsActive ? "fa-ban" : "fa-check")"></i>
+                                    </button>
+                                </form>
+                                <button onclick="openUserModal('@Url.Action("Edit", "User", new { id = user.Id })')" class="btn-checkout" title="Edit Profile" style="width: 36px; padding: 0; height: 36px; margin-top: 0; font-size: 0.75rem; border-radius: 10px; background: #F3F4F6; color: #4B5563; box-shadow: none;">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 }

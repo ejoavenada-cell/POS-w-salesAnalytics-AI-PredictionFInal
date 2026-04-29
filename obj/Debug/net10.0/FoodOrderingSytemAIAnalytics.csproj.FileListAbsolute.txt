@@ -211,8 +211,10 @@ C:\Users\IAI-TS\source\repos\AI_Website\FoodOrderingSytemAIAnalytics\obj\Debug\n
 C:\Users\IAI-TS\source\repos\AI_Website\FoodOrderingSytemAIAnalytics\obj\Debug\net10.0\FoodOrderingSytemAIAnalytics.pdb
 C:\Users\IAI-TS\source\repos\AI_Website\FoodOrderingSytemAIAnalytics\obj\Debug\net10.0\FoodOrderingSytemAIAnalytics.genruntimeconfig.cache
 C:\Users\IAI-TS\source\repos\AI_Website\FoodOrderingSytemAIAnalytics\obj\Debug\net10.0\ref\FoodOrderingSytemAIAnalytics.dll
-C:\Users\IAI-TS\source\repos\AI_Website\FoodOrderingSytemAIAnalytics\obj\Debug\net10.0\compressed\htx2kraofe-{0}-a1jlgszv8y-a1jlgszv8y.gz
-C:\Users\IAI-TS\source\repos\AI_Website\FoodOrderingSytemAIAnalytics\obj\Debug\net10.0\compressed\tiiw6s8fxf-{0}-e7ak8uzi2f-e7ak8uzi2f.gz
 C:\Users\IAI-TS\source\repos\AI_Website\FoodOrderingSytemAIAnalytics\bin\Debug\net10.0\AI\forecast_results.json
 C:\Users\IAI-TS\source\repos\AI_Website\FoodOrderingSytemAIAnalytics\bin\Debug\net10.0\AI\prophet_model.json
 C:\Users\IAI-TS\source\repos\AI_Website\FoodOrderingSytemAIAnalytics\obj\Debug\net10.0\FoodOrderingSytemAIAnalytics.sourcelink.json
+C:\Users\IAI-TS\source\repos\AI_Website\FoodOrderingSytemAIAnalytics\obj\Debug\net10.0\compressed\kdafux6z2h-{0}-x4eraawkgx-x4eraawkgx.gz
+C:\Users\IAI-TS\source\repos\AI_Website\FoodOrderingSytemAIAnalytics\obj\Debug\net10.0\compressed\tiiw6s8fxf-{0}-0cvwks13qs-0cvwks13qs.gz
+C:\Users\IAI-TS\source\repos\AI_Website\FoodOrderingSytemAIAnalytics\bin\Debug\net10.0\MiniExcel.dll
+C:\Users\IAI-TS\source\repos\AI_Website\FoodOrderingSytemAIAnalytics\obj\Debug\net10.0\compressed\htx2kraofe-{0}-4s3asiuqt2-4s3asiuqt2.gz

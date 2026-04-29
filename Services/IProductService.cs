@@ -5,13 +5,14 @@ namespace FoodOrderingSytemAIAnalytics.Services
 {
     public interface IProductService
     {
-        Task<IEnumerable<ProductDisplayViewModel>> GetProductsAsync(int page = 1, int pageSize = 20, string? category = null, string? searchTerm = null);
+        Task<IEnumerable<ProductDisplayViewModel>> GetProductsAsync(int page = 1, int pageSize = 20, string? category = null, string? searchTerm = null, bool onlyActive = true);
         Task<ProductDisplayViewModel?> GetProductDisplayByIdAsync(int id);
         Task<Product?> GetProductByIdAsync(int id);
         Task<(bool Success, string Message, Product? Product)> AddProductAsync(Product product);
         Task<(bool Success, string Message)> UpdateProductAsync(Product product);
         Task<(bool Success, string Message)> SoftDeleteProductAsync(int id);
-        Task<(bool Success, string Message)> UpdateStockAsync(int productId, int quantityChange);
+        Task<(bool Success, string Message)> ToggleProductStatusAsync(int id);
+        Task<(bool Success, string Message)> UpdateStockAsync(int productId, decimal quantityChange, bool saveChanges = true);
         Task<(bool Success, string Message)> ApplyDiscountAsync(int productId, decimal discountPercent);
         Task<bool> IsStockAvailableAsync(int productId, int requestedQuantity);
         

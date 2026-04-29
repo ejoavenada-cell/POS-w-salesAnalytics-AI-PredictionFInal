@@ -1,0 +1,66 @@
+@model FoodOrderingSytemAIAnalytics.Models.User
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Edit User";
+}
+
+<div class="section-bar" style="margin-bottom: 2rem;">
+    <div>
+        <h2 style="font-size: 1.75rem; font-weight: 900; color: #1F2937; margin-bottom: 0.25rem;">Edit Staff Member</h2>
+        <span class="count">Update profile details and access rights</span>
+    </div>
+    <div>
+        <a href="@Url.Action("Index", "User")" class="add-btn" style="background: white; border: 1.5px solid #E5E7EB; color: #374151; width: auto; padding: 0 1.25rem; height: 44px; border-radius: 12px; font-size: 0.85rem; text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+    </div>
+</div>
+
+<div style="max-width: 700px; margin: 0 auto; background: white; border-radius: 32px; box-shadow: 0 20px 40px -12px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid #E5E7EB;">
+    <div style="padding: 1rem;">
+        <partial name="_EditUserPartial" model="Model" />
+    </div>
+</div>
+
+<script>
+    // Adjust the partial UI for full-page view
+    document.addEventListener("DOMContentLoaded", function() {
+        const modalCloseBtns = document.querySelectorAll('button[onclick*="userModal"]');
+        modalCloseBtns.forEach(btn => {
+            if (btn.innerText.includes("Cancel") || btn.querySelector('.fas.fa-times')) {
+                btn.onclick = function() {
+                    window.location.href = '@Url.Action("Index", "User")';
+                };
+            }
+        });
+    });
+
+    function updateUserFileName(input) {
+        const display = document.getElementById('userFileNameDisplay');
+        const placeholder = document.getElementById('userImagePlaceholder');
+        const preview = document.getElementById('userImagePreview');
+        
+        if (input.files && input.files[0]) {
+            display.innerText = input.files[0].name;
+            display.style.display = 'block';
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (preview) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                } else if (placeholder) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.id = 'userImagePreview';
+                    img.style.width = '100%';
+                    img.style.height = '100%';
+                    img.style.objectFit = 'cover';
+                    placeholder.parentNode.appendChild(img);
+                    placeholder.style.display = 'none';
+                }
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>

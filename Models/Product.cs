@@ -26,8 +26,9 @@ namespace FoodOrderingSytemAIAnalytics.Models
         [Range(0, 10000)]
         public decimal Price { get; set; }
 
-        [Range(0, int.MaxValue)]
-        public int? Stock { get; set; }
+        [Column(TypeName = "decimal(18,2)")]
+        [Range(0, 10000)]
+        public decimal? Stock { get; set; }
 
         [Required]
         [StringLength(50)]

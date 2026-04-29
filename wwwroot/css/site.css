@@ -21,81 +21,100 @@ body {
 }
 
 .login-container {
-    height: 100vh;
+    min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    background-color: #f8fafc;
+    background-image: radial-gradient(at 0% 0%, rgba(45, 159, 150, 0.05) 0px, transparent 50%), 
+                      radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.05) 0px, transparent 50%);
 }
 
 .login-card {
-    background: var(--card-bg);
-    padding: 2.5rem;
-    border-radius: 1rem;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    background: white;
+    padding: 3.5rem;
+    border-radius: 2rem;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.03), 0 10px 15px rgba(0, 0, 0, 0.02);
     width: 100%;
-    max-width: 400px;
+    max-width: 440px;
+    border: 1px solid #f1f5f9;
 }
 
 .login-header {
     text-align: center;
-    margin-bottom: 2rem;
+    margin-bottom: 2.5rem;
 }
 
 .login-header h1 {
-    font-size: 1.875rem;
-    font-weight: 700;
-    color: var(--primary-color);
-    margin: 0;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.5rem;
 }
 
 .form-group {
-    margin-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
 }
 
 .form-group label {
     display: block;
-    font-size: 0.875rem;
-    font-weight: 500;
+    font-size: 0.75rem;
+    font-weight: 700;
     margin-bottom: 0.5rem;
-    color: var(--text-muted);
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .form-control {
     width: 100%;
-    padding: 0.75rem 1rem;
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    font-size: 1rem;
-    transition: all 0.2s;
+    height: 46px;
+    padding: 0 1rem;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #1e293b;
+    background: #f8fafc;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .form-control:focus {
     outline: none;
-    border-color: var(--secondary-color);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: var(--primary-color);
+    background: white;
+    box-shadow: 0 0 0 4px var(--primary-light);
 }
 
 .btn-primary {
     width: 100%;
-    padding: 0.75rem;
+    height: 52px;
     background-color: var(--primary-color);
     color: white;
     border: none;
-    border-radius: 0.5rem;
+    border-radius: 14px;
     font-size: 1rem;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
-    transition: opacity 0.2s;
+    transition: all 0.2s;
+    box-shadow: 0 10px 15px -3px rgba(45, 159, 150, 0.2);
 }
 
 .btn-primary:hover {
-    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 12px 20px -5px rgba(45, 159, 150, 0.3);
+    filter: brightness(1.05);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
 }
 
 .error-message {
-    color: var(--accent-color);
-    font-size: 0.875rem;
+    color: #ef4444;
+    font-size: 0.8rem;
+    font-weight: 600;
     margin-top: 0.5rem;
 }
 

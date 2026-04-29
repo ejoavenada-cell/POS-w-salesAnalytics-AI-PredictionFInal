@@ -79,7 +79,7 @@ def generate_fallback_data():
     y_values = [1000 + (i * 10) + (500 if i % 7 > 4 else 0) for i in range(60)]
     return pd.DataFrame({'ds': dates, 'y': y_values})
 
-def train_and_save(csv_file=None):
+def train_and_save(csv_file=None, sensitivity=0.1, mode='multiplicative'):
     """Hybrid Training Process."""
     db_df = fetch_db_data()
     csv_df = load_from_csv(csv_file)
@@ -101,25 +101,33 @@ def train_and_save(csv_file=None):
     else:
         full_df = generate_fallback_data()
 
-    print(f"Training on {len(full_df)} samples.")
-    model = Prophet(weekly_seasonality=True, seasonality_mode='multiplicative', changepoint_prior_scale=0.1)
+    print(f"Training on {len(full_df)} samples. Sensitivity: {sensitivity}, Mode: {mode}")
+    model = Prophet(
+        weekly_seasonality=True, 
+        seasonality_mode=mode, 
+        changepoint_prior_scale=sensitivity
+    )
     model.fit(full_df)
     
     with open(MODEL_PATH, 'w') as f:
         f.write(model_to_json(model))
     print(f"Model saved: {MODEL_PATH}")
 
-def predict(days=30):
+def predict(horizon_hours=720):
     """Generate and export predictions."""
     if not os.path.exists(MODEL_PATH):
         return
     with open(MODEL_PATH, 'r') as f:
         model = model_from_json(f.read())
     
-    future = model.make_future_dataframe(periods=days)
+    # Prophet works best with days, so convert hours to fraction of days
+    periods = int(max(1, horizon_hours / 24))
+    print(f"Predicting next {periods} days ({horizon_hours} hours)...")
+    
+    future = model.make_future_dataframe(periods=periods)
     forecast = model.predict(future)
     
-    results = forecast.tail(days)[['ds', 'yhat']].copy()
+    results = forecast.tail(periods)[['ds', 'yhat']].copy()
     results['ds'] = results['ds'].dt.strftime('%Y-%m-%d')
     results.to_json(RESULTS_PATH, orient='records', date_format='iso')
     print(f"Results exported: {RESULTS_PATH}")
@@ -128,10 +136,13 @@ def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Prophet AI Suite")
     parser.add_argument("--file", help="Path to training CSV")
+    parser.add_argument("--horizon", type=int, default=720, help="Forecast horizon in hours")
+    parser.add_argument("--sensitivity", type=float, default=0.1, help="Changepoint prior scale")
+    parser.add_argument("--mode", default="multiplicative", help="Seasonality mode")
     args = parser.parse_args()
     
-    train_and_save(csv_file=args.file)
-    predict()
+    train_and_save(csv_file=args.file, sensitivity=args.sensitivity, mode=args.mode)
+    predict(horizon_hours=args.horizon)
 
 if __name__ == "__main__":
     main()

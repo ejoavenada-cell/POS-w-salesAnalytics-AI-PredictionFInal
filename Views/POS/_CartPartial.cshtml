@@ -8,7 +8,16 @@
         @foreach (var item in Model.Items)
         {
             <div class="cart-row">
-                <div class="cart-icon">@item.ProductName[0]</div>
+                <div class="cart-icon">
+                    @if (!string.IsNullOrEmpty(item.ImageUrl))
+                    {
+                        <img src="@item.ImageUrl" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;" />
+                    }
+                    else
+                    {
+                        @item.ProductName[0]
+                    }
+                </div>
                 <div class="cart-detail">
                     <div class="cart-detail-name">@item.ProductName</div>
                     <div class="cart-detail-price">₱@item.Price.ToString("N2") × @item.Quantity = ₱@item.Subtotal.ToString("N2")</div>

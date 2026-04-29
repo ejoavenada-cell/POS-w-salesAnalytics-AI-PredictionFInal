@@ -18,9 +18,10 @@ namespace FoodOrderingSytemAIAnalytics.Services
             _analyticsService = analyticsService;
         }
 
-        public async Task<IEnumerable<ProductDisplayViewModel>> GetProductsAsync(int page = 1, int pageSize = 20, string? category = null, string? searchTerm = null)
+        public async Task<IEnumerable<ProductDisplayViewModel>> GetProductsAsync(int page = 1, int pageSize = 20, string? category = null, string? searchTerm = null, bool onlyActive = true)
         {
-            var query = _context.Products.AsNoTracking().Where(p => p.IsActive);
+            var query = _context.Products.AsNoTracking();
+            if (onlyActive) query = query.Where(p => p.IsActive);
 
             if (!string.IsNullOrEmpty(searchTerm))
                 query = query.Where(p => p.Name.Contains(searchTerm) || p.Code.Contains(searchTerm));
@@ -49,7 +50,8 @@ namespace FoodOrderingSytemAIAnalytics.Services
                 IsNew = (DateTime.Now - p.DateIntroduced).TotalDays <= 30,
                 IsTopSelling = topSellingIds.Contains(p.Id),
                 Stock = p.Stock,
-                ImageUrl = p.ImageUrl
+                ImageUrl = p.ImageUrl,
+                IsActive = p.IsActive
             });
         }
 
@@ -73,7 +75,8 @@ namespace FoodOrderingSytemAIAnalytics.Services
                 IsNew = (DateTime.Now - p.DateIntroduced).TotalDays <= 30,
                 IsTopSelling = topSellingIds.Contains(p.Id),
                 Stock = p.Stock,
-                ImageUrl = p.ImageUrl
+                ImageUrl = p.ImageUrl,
+                IsActive = p.IsActive
             };
         }
 
@@ -129,16 +132,45 @@ namespace FoodOrderingSytemAIAnalytics.Services
             return (true, "Product deactivated successfully.");
         }
 
-        public async Task<(bool Success, string Message)> UpdateStockAsync(int productId, int quantityChange)
+        public async Task<(bool Success, string Message)> ToggleProductStatusAsync(int id)
+        {
+            var product = await _context.Products.FindAsync(id);
+            if (product == null) return (false, "Product not found.");
+
+            product.IsActive = !product.IsActive;
+            await _context.SaveChangesAsync();
+
+            string status = product.IsActive ? "Enabled" : "Disabled";
+            return (true, $"Product {status} successfully.");
+        }
+
+        public async Task<(bool Success, string Message)> UpdateStockAsync(int productId, decimal quantityChange, bool saveChanges = true)
         {
             var product = await _context.Products.FindAsync(productId);
             if (product == null) return (false, "Product not found.");
 
-            if (product.Stock + quantityChange < 0)
+            if ((product.Stock ?? 0) + quantityChange < 0)
                 return (false, "Insufficient stock.");
 
-            product.Stock += quantityChange;
-            await _context.SaveChangesAsync();
+            product.Stock = (product.Stock ?? 0) + quantityChange;
+            
+            // Record Restock History if positive change
+            if (quantityChange > 0)
+            {
+                _context.RestockHistory.Add(new RestockHistory
+                {
+                    ProductId = productId,
+                    QuantityRestocked = quantityChange,
+                    RestockDate = DateTime.Now,
+                    StockAfterRestock = product.Stock.Value,
+                    Remarks = "System Restock"
+                });
+            }
+            
+            if (saveChanges)
+            {
+                await _context.SaveChangesAsync();
+            }
 
             return (true, "Stock updated successfully.");
         }

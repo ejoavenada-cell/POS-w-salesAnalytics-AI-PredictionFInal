@@ -40,6 +40,8 @@ namespace FoodOrderingSytemAIAnalytics.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int id)
         {
+            if (id == -999) return Forbid("The Master Admin account is hard-coded and cannot be modified.");
+            
             var user = await _context.Users.FindAsync(id);
             if (user == null) return NotFound();
 
@@ -120,6 +122,18 @@ namespace FoodOrderingSytemAIAnalytics.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ToggleApproval(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return NotFound();
+
+            user.IsApproved = !user.IsApproved;
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+
         [HttpGet]
         public async Task<IActionResult> Profile()
         {
@@ -136,6 +150,9 @@ namespace FoodOrderingSytemAIAnalytics.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateProfile(User user, string? NewPassword)
         {
+            if (User.Identity?.Name == "adminmain") 
+                return Forbid("The Master Admin account is hard-coded and cannot be modified.");
+
             var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
             if (user.Id != userId) return Forbid();
 

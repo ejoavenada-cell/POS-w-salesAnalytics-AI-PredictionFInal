@@ -3,8 +3,15 @@
    Senior UI/UX — Clean, fluid, production-ready
    ============================================ */
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Inter', -apple-system, sans-serif; }
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', -apple-system, sans-serif;
+}
 
 :root {
     --pos-primary: #2D9F96;
@@ -37,18 +44,37 @@ body { font-family: 'Inter', -apple-system, sans-serif; }
     z-index: 10;
 }
 
-.sidebar-brand {
-    width: 44px;
-    height: 44px;
-    background: var(--pos-primary);
-    color: white;
-    border-radius: 14px;
+/* ── Sidebar Logo Section ── */
+.sidebar-logo-section {
+    width: 100%;
+    padding: 1.5rem 0.75rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.sidebar-main-logo {
+    width: 100%;
+    max-width: 64px;
+    height: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
+}
+
+.sidebar-logo-text {
+    width: 56px;
+    height: 56px;
+    background: #fff;
+    color: var(--pos-primary);
+    border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.1rem;
+    font-size: 1.25rem;
     font-weight: 900;
-    margin-bottom: 2.5rem;
+    border: 1px solid #E5E7EB;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
 }
 
 .sidebar-nav {
@@ -76,8 +102,15 @@ body { font-family: 'Inter', -apple-system, sans-serif; }
     cursor: pointer;
 }
 
-.sidebar-link i { font-size: 1.2rem; }
-.sidebar-link span { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.02em; }
+.sidebar-link i {
+    font-size: 1.2rem;
+}
+
+.sidebar-link span {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
 
 .sidebar-link:hover {
     background: var(--pos-primary-light);
@@ -87,7 +120,31 @@ body { font-family: 'Inter', -apple-system, sans-serif; }
 .sidebar-link.active {
     background: var(--pos-primary);
     color: #fff;
-    box-shadow: 0 6px 16px rgba(45,159,150,0.35);
+    box-shadow: 0 6px 16px rgba(45, 159, 150, 0.35);
+}
+
+/* ── Locked Links ── */
+.sidebar-link.locked-link {
+    opacity: 0.4;
+    filter: grayscale(1);
+    cursor: not-allowed;
+    position: relative;
+}
+
+.locked-icon {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 0.6rem !important;
+    color: #EF4444;
+    background: white;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar-bottom {
@@ -97,7 +154,8 @@ body { font-family: 'Inter', -apple-system, sans-serif; }
 /* ── Main Terminal ── */
 .pos-terminal {
     flex: 1;
-    min-width: 0;              /* prevent flex child overflow */
+    min-width: 0;
+    /* prevent flex child overflow */
     display: flex;
     flex-direction: column;
     padding: 1.75rem 2.5rem;
@@ -106,8 +164,14 @@ body { font-family: 'Inter', -apple-system, sans-serif; }
 }
 
 /* hide scrollbar on main terminal */
-.pos-terminal::-webkit-scrollbar { width: 0; }
-.pos-terminal { scrollbar-width: none; -ms-overflow-style: none; }
+.pos-terminal::-webkit-scrollbar {
+    width: 0;
+}
+
+.pos-terminal {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
 
 /* ── Header Bar ── */
 .pos-header {
@@ -153,16 +217,69 @@ body { font-family: 'Inter', -apple-system, sans-serif; }
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.4rem 1rem 0.4rem 0.5rem;
-    border-radius: 14px;
+    padding: 0.5rem 1.25rem 0.5rem 0.6rem;
+    border-radius: 16px;
     border: 1px solid #E5E7EB;
     background: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
 }
 
-.user-pill img {
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
+.user-avatar-wrap {
+    position: relative;
+    width: 42px;
+    height: 42px;
+}
+
+.user-avatar-wrap img {
+    width: 100%;
+    height: 100%;
+    border-radius: 12px;
+    object-fit: cover;
+}
+
+.edit-pill-btn {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--pos-primary);
+    border: 2px solid #fff;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+}
+
+.edit-pill-btn:hover {
+    transform: scale(1.1);
+    background: #248a82;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.user-name {
+    font-weight: 800;
+    color: #1F2937;
+    font-size: 0.95rem;
+    line-height: 1;
+}
+
+.user-role {
+    font-size: 0.65rem;
+    color: #9CA3AF;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
 }
 
 /* ── Category Tabs ── */
@@ -203,7 +320,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; }
     background: var(--pos-primary);
     border-color: var(--pos-primary);
     color: #fff;
-    box-shadow: 0 6px 16px rgba(45,159,150,0.3);
+    box-shadow: 0 6px 16px rgba(45, 159, 150, 0.3);
 }
 
 /* ── Section Title ── */
@@ -247,7 +364,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; }
 
 .product-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 12px 24px -6px rgba(0,0,0,0.08);
+    box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.08);
     border-color: var(--pos-primary);
 }
 
@@ -286,6 +403,22 @@ body { font-family: 'Inter', -apple-system, sans-serif; }
     justify-content: center;
     font-size: 0.85rem;
     z-index: 3;
+}
+
+.product-code-badge {
+    position: absolute;
+    bottom: 0.75rem;
+    left: 0.75rem;
+    z-index: 5;
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: var(--pos-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    -webkit-text-stroke: 1.2px white;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    pointer-events: none;
+    opacity: 1;
 }
 
 .product-thumb {
@@ -338,11 +471,12 @@ body { font-family: 'Inter', -apple-system, sans-serif; }
 }
 
 .product-price .old {
-    color: #D1D5DB;
+    color: #EF4444;
     text-decoration: line-through;
-    font-size: 0.8rem;
-    margin-right: 0.35rem;
-    font-weight: 600;
+    font-size: 0.85rem;
+    margin-right: 0.4rem;
+    font-weight: 700;
+    opacity: 0.85;
 }
 
 .add-btn {
@@ -390,15 +524,19 @@ body { font-family: 'Inter', -apple-system, sans-serif; }
 }
 
 /* invisible scrollbar on cart */
-.cart-items::-webkit-scrollbar, 
+.cart-items::-webkit-scrollbar,
 .pos-terminal::-webkit-scrollbar,
 #receiptItems::-webkit-scrollbar {
     display: none;
 }
 
-.cart-items, .pos-terminal, #receiptItems {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+.cart-items,
+.pos-terminal,
+#receiptItems {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
 }
 
 .cart-empty {
@@ -426,7 +564,9 @@ body { font-family: 'Inter', -apple-system, sans-serif; }
     border-bottom: 1px solid #F3F4F6;
 }
 
-.cart-row:last-child { border-bottom: none; }
+.cart-row:last-child {
+    border-bottom: none;
+}
 
 .cart-icon {
     width: 42px;
@@ -470,7 +610,9 @@ body { font-family: 'Inter', -apple-system, sans-serif; }
     margin-top: 2px;
 }
 
-.cart-detail-remove:hover { text-decoration: underline; }
+.cart-detail-remove:hover {
+    text-decoration: underline;
+}
 
 .qty-ctrl {
     display: flex;
@@ -541,7 +683,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; }
 /* ── Bill Buttons ── */
 .bill-grid {
     display: grid;
-    grid-template-columns: repeat(4,1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 0.4rem;
     margin: 0.75rem 0;
 }
@@ -614,7 +756,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; }
     align-items: center;
     justify-content: center;
     gap: 0.6rem;
-    box-shadow: 0 8px 16px rgba(45,159,150,0.3);
+    box-shadow: 0 8px 16px rgba(45, 159, 150, 0.3);
 }
 
 .btn-checkout:hover {
@@ -634,7 +776,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; }
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.45);
+    background: rgba(0, 0, 0, 0.45);
     z-index: 1000;
     align-items: center;
     justify-content: center;
@@ -647,13 +789,20 @@ body { font-family: 'Inter', -apple-system, sans-serif; }
     text-align: center;
     max-width: 420px;
     width: 92%;
-    box-shadow: 0 25px 60px rgba(0,0,0,0.2);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2);
     animation: popIn 0.35s ease;
 }
 
 @keyframes popIn {
-    from { transform: scale(0.85); opacity: 0; }
-    to   { transform: scale(1);    opacity: 1; }
+    from {
+        transform: scale(0.85);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 .success-icon {
@@ -697,6 +846,13 @@ body { font-family: 'Inter', -apple-system, sans-serif; }
 
 /* ── Payment Panel Slide ── */
 @keyframes slideUp {
-    from { opacity: 0; transform: translateY(10px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

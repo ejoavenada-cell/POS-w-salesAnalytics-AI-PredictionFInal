@@ -1,73 +1,278 @@
 @model FoodOrderingSytemAIAnalytics.Models.ViewModels.RegisterViewModel
+@inject FoodOrderingSytemAIAnalytics.Data.ApplicationDbContext _context
 @{
-    ViewData["Title"] = "Staff Registration";
+    ViewData["Title"] = "Register";
     Layout = "_Layout";
+    var settings = _context.StoreSettings.FirstOrDefault() ?? new FoodOrderingSytemAIAnalytics.Models.StoreSetting();
 }
 
-<div class="login-container" style="background: linear-gradient(135deg, #2D9F96 0%, #1a5e59 100%); height: auto; min-height: 100vh; padding: 4rem 0;">
-    <div class="login-card" style="border-radius: 24px; padding: 3rem; max-width: 500px;">
-        <div class="login-header">
-            <div style="width: 60px; height: 60px; background: var(--primary-color); border-radius: 16px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.75rem; margin: 0 auto 1.5rem;">
-                <i class="fas fa-user-plus"></i>
+<div class="auth-wrapper">
+    <!-- Fixed Background Decor -->
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <style>
+        :root {
+            --card-bg: rgba(255, 255, 255, 0.98);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        .auth-wrapper {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #0F172A 100%);
+            min-height: 100vh;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 3rem 1rem;
+            position: relative;
+            overflow-x: hidden;
+            overflow-y: auto;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            z-index: 1;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .blob-1 {
+            width: 600px; height: 600px;
+            background: var(--primary-color);
+            top: -200px; right: -150px;
+            animation: float 30s infinite alternate;
+        }
+
+        .blob-2 {
+            width: 500px; height: 500px;
+            background: #4F46E5;
+            bottom: -150px; left: -150px;
+            animation: float 22s infinite alternate-reverse;
+        }
+
+        @@keyframes float {
+            from { transform: translate(0, 0) scale(1); }
+            to { transform: translate(80px, 80px) scale(1.1); }
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border-radius: 48px;
+            padding: 3rem;
+            width: 100%;
+            max-width: 550px;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255, 255, 255, 1);
+            position: relative;
+            z-index: 10;
+            margin: auto;
+            flex-shrink: 0;
+        }
+
+        .logo-box {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+            border: 1.5px solid #F1F5F9;
+        }
+
+        .logo-box img { width: 100%; height: 100%; object-fit: contain; padding: 10px; }
+
+        .input-group { margin-bottom: 1rem; width: 100%; }
+        
+        .label-text {
+            display: block;
+            font-weight: 800;
+            color: #475569;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            margin-bottom: 0.4rem;
+            margin-left: 0.25rem;
+            letter-spacing: 0.08em;
+        }
+
+        .input-field {
+            height: 56px;
+            border-radius: 18px;
+            border: 2px solid #E2E8F0;
+            padding: 0 1.25rem;
+            width: 100%;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1E293B;
+            background: #F8FAFC;
+            transition: all 0.3s ease;
+            outline: none;
+            display: block;
+        }
+
+        .input-field:focus { border-color: var(--primary-color); background: white; box-shadow: 0 0 0 6px var(--primary-light); }
+
+        .role-selector {
+            display: flex;
+            gap: 0.5rem;
+            background: #F1F5F9;
+            padding: 0.4rem;
+            border-radius: 18px;
+        }
+
+        .role-btn {
+            flex: 1;
+            padding: 0.75rem;
+            border-radius: 14px;
+            font-weight: 900;
+            font-size: 0.8rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .submit-btn {
+            height: 64px;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            font-weight: 900;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 20px 40px -12px var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        @@media (max-width: 500px) {
+            .glass-card { padding: 2rem 1.5rem; border-radius: 36px; }
+            .grid-mobile { grid-template-columns: 1fr !important; gap: 0.75rem !important; }
+            .input-field { height: 54px; }
+            .logo-box { width: 70px; height: 70px; margin-bottom: 1rem; }
+        }
+    </style>
+
+    <div class="glass-card">
+        <div style="text-align: center; margin-bottom: 1rem;">
+            <div class="logo-box">
+                @if (!string.IsNullOrEmpty(settings.LogoUrl))
+                {
+                    <img src="@settings.LogoUrl" />
+                }
+                else
+                {
+                    <i class="fas fa-user-plus" style="font-size: 2.2rem; color: var(--primary-color);"></i>
+                }
             </div>
-            <h1 style="font-size: 2rem; font-weight: 800; color: #1F2937;">Join the Team</h1>
-            <p style="color: var(--text-muted); margin-top: 0.5rem; font-weight: 500;">Create your staff profile</p>
         </div>
 
-        <form asp-action="Register" method="post">
-            <div asp-validation-summary="ModelOnly" class="error-message" style="margin-bottom: 1rem; text-align: center;"></div>
+        <form asp-action="Register" method="post" style="width: 100%;">
+            <div asp-validation-summary="ModelOnly" style="color: #EF4444; font-size: 0.85rem; font-weight: 800; text-align: center; background: #FEF2F2; padding: 1rem; border-radius: 20px; border: 1.5px solid #FEE2E2; margin-bottom: 1.5rem;"></div>
 
-            <div class="form-group">
-                <label asp-for="Username" style="font-weight: 600; color: #4B5563;">Full Name</label>
-                <input asp-for="Username" class="form-control" placeholder="John Doe" style="height: 52px; border-radius: 12px; border: 2px solid #F3F4F6; background: #F9FAFB;" />
-                <span asp-validation-for="Username" class="error-message"></span>
+            <div class="input-group">
+                <label class="label-text">Username</label>
+                <input asp-for="Username" class="input-field" placeholder="Staff Name" required />
+                <span asp-validation-for="Username" style="color: #EF4444; font-size: 0.75rem; font-weight: 700; margin-top: 0.4rem; display: block; padding-left: 0.5rem;"></span>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
-                <div class="form-group">
-                    <label asp-for="Age" style="font-weight: 600; color: #4B5563;">Age</label>
-                    <input asp-for="Age" type="number" class="form-control" placeholder="Age" style="height: 52px; border-radius: 12px; border: 2px solid #F3F4F6; background: #F9FAFB;" />
-                    <span asp-validation-for="Age" class="error-message"></span>
+            <div class="grid-mobile" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.25rem;">
+                <div class="input-group">
+                    <label class="label-text">Age</label>
+                    <input asp-for="Age" type="number" class="input-field" placeholder="0" min="1" max="120" required />
                 </div>
-                <div class="form-group">
-                    <label asp-for="Sex" style="font-weight: 600; color: #4B5563;">Sex</label>
-                    <select asp-for="Sex" class="form-control" style="height: 52px; border-radius: 12px; border: 2px solid #F3F4F6; background: #F9FAFB;">
-                        <option value="">Select...</option>
+                <div class="input-group">
+                    <label class="label-text">Sex</label>
+                    <select asp-for="Sex" class="input-field" style="cursor: pointer;">
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
                         <option value="Other">Other</option>
                     </select>
-                    <span asp-validation-for="Sex" class="error-message"></span>
                 </div>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Role" style="font-weight: 600; color: #4B5563;">Assign Role</label>
-                <select asp-for="Role" class="form-control" style="height: 52px; border-radius: 12px; border: 2px solid #F3F4F6; background: #F9FAFB;">
-                    <option value="Staff">Staff Terminal User</option>
-                    <option value="Admin">System Administrator</option>
-                </select>
-                <span asp-validation-for="Role" class="error-message"></span>
+            <div class="input-group">
+                <label class="label-text">Role</label>
+                <div class="role-selector">
+                    <label style="flex: 1; cursor: pointer;">
+                        <input type="radio" asp-for="Role" value="Staff" checked style="display: none;" onchange="updateRoleUI(this)">
+                        <div id="role-staff-pill" class="role-btn" style="background: var(--primary-color); color: white; box-shadow: 0 10px 20px -5px var(--primary-color);">STAFF</div>
+                    </label>
+                    <label style="flex: 1; cursor: pointer;">
+                        <input type="radio" asp-for="Role" value="Admin" style="display: none;" onchange="updateRoleUI(this)">
+                        <div id="role-admin-pill" class="role-btn" style="background: white; color: #64748B;">ADMIN</div>
+                    </label>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Password" style="font-weight: 600; color: #4B5563;">Password</label>
-                <input asp-for="Password" type="password" class="form-control" placeholder="••••••••" style="height: 52px; border-radius: 12px; border: 2px solid #F3F4F6; background: #F9FAFB;" />
-                <span asp-validation-for="Password" class="error-message"></span>
+            <div class="input-group" style="margin-top: 1rem;">
+                <label class="label-text">Password</label>
+                <input asp-for="Password" type="password" class="input-field" placeholder="••••••••" required />
+                <span asp-validation-for="Password" style="color: #EF4444; font-size: 0.75rem; font-weight: 700; margin-top: 0.4rem; display: block; padding-left: 0.5rem;"></span>
             </div>
 
-            <div class="form-group" style="margin-bottom: 2rem;">
-                <label asp-for="ConfirmPassword" style="font-weight: 600; color: #4B5563;">Confirm Password</label>
-                <input asp-for="ConfirmPassword" type="password" class="form-control" placeholder="••••••••" style="height: 52px; border-radius: 12px; border: 2px solid #F3F4F6; background: #F9FAFB;" />
-                <span asp-validation-for="ConfirmPassword" class="error-message"></span>
+            <div class="input-group">
+                <label class="label-text">Confirm</label>
+                <input asp-for="ConfirmPassword" type="password" class="input-field" placeholder="••••••••" required />
+                <span asp-validation-for="ConfirmPassword" style="color: #EF4444; font-size: 0.75rem; font-weight: 700; margin-top: 0.4rem; display: block; padding-left: 0.5rem;"></span>
             </div>
 
-            <button type="submit" class="btn-primary" style="height: 56px; border-radius: 16px; font-size: 1.125rem; font-weight: 700; background: var(--primary-color); box-shadow: 0 10px 15px -3px rgba(45, 159, 150, 0.3);">Register Account</button>
+            <button type="submit" class="submit-btn">
+                Sign Up <i class="fas fa-arrow-right"></i>
+            </button>
         </form>
 
-        <div style="margin-top: 2rem; text-align: center; font-size: 0.875rem;">
-            <span style="color: var(--text-muted); font-weight: 500;">Already part of Tasty Station?</span>
-            <a href="@Url.Action("Login", "Auth")" style="color: var(--primary-color); text-decoration: none; font-weight: 700;">Sign in here</a>
+        <div style="margin-top: 2rem; text-align: center; border-top: 2.5px solid #F1F5F9; padding-top: 2rem;">
+            <p style="color: #64748B; font-weight: 600; font-size: 0.9rem; margin-bottom: 0.8rem;">Existing Staff?</p>
+            <a href="@Url.Action("Login", "Auth")" style="color: var(--primary-color); font-weight: 900; font-size: 1.1rem; text-decoration: none;">Login Instead</a>
         </div>
     </div>
 </div>
+
+<script>
+    function updateRoleUI(radio) {
+        const staffPill = document.getElementById('role-staff-pill');
+        const adminPill = document.getElementById('role-admin-pill');
+        const primary = 'var(--primary-color)';
+        
+        if (radio.value === 'Staff') {
+            staffPill.style.background = primary;
+            staffPill.style.color = 'white';
+            staffPill.style.boxShadow = `0 10px 20px -5px ${primary}`;
+            adminPill.style.background = 'white';
+            adminPill.style.color = '#64748B';
+            adminPill.style.boxShadow = 'none';
+        } else {
+            adminPill.style.background = primary;
+            adminPill.style.color = 'white';
+            adminPill.style.boxShadow = `0 10px 20px -5px ${primary}`;
+            staffPill.style.background = 'white';
+            staffPill.style.color = '#64748B';
+            staffPill.style.boxShadow = 'none';
+        }
+    }
+</script>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

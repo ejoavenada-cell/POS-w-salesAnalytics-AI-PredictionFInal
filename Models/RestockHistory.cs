@@ -4,16 +4,10 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FoodOrderingSytemAIAnalytics.Models
 {
-    public class TransactionDetail
+    public class RestockHistory
     {
         [Key]
         public int Id { get; set; }
-
-        [Required]
-        public int TransactionId { get; set; }
-
-        [ForeignKey("TransactionId")]
-        public virtual Transaction Transaction { get; set; } = null!;
 
         [Required]
         public int ProductId { get; set; }
@@ -23,14 +17,15 @@ namespace FoodOrderingSytemAIAnalytics.Models
 
         [Required]
         [Column(TypeName = "decimal(18,2)")]
-        public decimal Quantity { get; set; }
+        public decimal QuantityRestocked { get; set; }
+
+        [Required]
+        public DateTime RestockDate { get; set; }
+
+        public string? Remarks { get; set; }
 
         [Required]
         [Column(TypeName = "decimal(18,2)")]
-        public decimal Price { get; set; } // Price at time of transaction
-
-        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal Subtotal { get; set; }
+        public decimal StockAfterRestock { get; set; }
     }
 }

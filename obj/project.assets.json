@@ -1121,6 +1121,15 @@
           }
         }
       },
+      "MiniExcel/1.43.1": {
+        "type": "package",
+        "compile": {
+          "lib/net10.0/MiniExcel.dll": {}
+        },
+        "runtime": {
+          "lib/net10.0/MiniExcel.dll": {}
+        }
+      },
       "Mono.TextTemplating/3.0.0": {
         "type": "package",
         "dependencies": {
@@ -3205,6 +3214,24 @@
         "microsoft.sqlserver.server.nuspec"
       ]
     },
+    "MiniExcel/1.43.1": {
+      "sha512": "1vjq98/3XWGQWzytsN715NIQtqJx2iSpVC5VJcX5KXvCIyPExY4PuuRbzKJYNqECJc266qlXQi2KHs4pzJ06SQ==",
+      "type": "package",
+      "path": "miniexcel/1.43.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "icon.png",
+        "lib/net10.0/MiniExcel.dll",
+        "lib/net45/MiniExcel.dll",
+        "lib/net8.0/MiniExcel.dll",
+        "lib/net9.0/MiniExcel.dll",
+        "lib/netstandard2.0/MiniExcel.dll",
+        "miniexcel.1.43.1.nupkg.sha512",
+        "miniexcel.nuspec"
+      ]
+    },
     "Mono.TextTemplating/3.0.0": {
       "sha512": "YqueG52R/Xej4VVbKuRIodjiAhV0HR/XVbLbNrJhCZnzjnSjgMJ/dCdV0akQQxavX6hp/LC6rqLGLcXeQYU7XA==",
       "type": "package",
@@ -3750,7 +3777,8 @@
       "BCrypt.Net-Next >= 4.1.0",
       "Microsoft.EntityFrameworkCore >= 10.0.0",
       "Microsoft.EntityFrameworkCore.Design >= 10.0.0",
-      "Microsoft.EntityFrameworkCore.SqlServer >= 10.0.0"
+      "Microsoft.EntityFrameworkCore.SqlServer >= 10.0.0",
+      "MiniExcel >= 1.43.1"
     ]
   },
   "packageFolders": {
@@ -3760,11 +3788,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "c:\\Users\\IAI-TS\\source\\repos\\AI_Website\\FoodOrderingSytemAIAnalytics\\FoodOrderingSytemAIAnalytics.csproj",
+      "projectUniqueName": "C:\\Users\\IAI-TS\\source\\repos\\AI_Website\\FoodOrderingSytemAIAnalytics\\FoodOrderingSytemAIAnalytics.csproj",
       "projectName": "FoodOrderingSytemAIAnalytics",
-      "projectPath": "c:\\Users\\IAI-TS\\source\\repos\\AI_Website\\FoodOrderingSytemAIAnalytics\\FoodOrderingSytemAIAnalytics.csproj",
+      "projectPath": "C:\\Users\\IAI-TS\\source\\repos\\AI_Website\\FoodOrderingSytemAIAnalytics\\FoodOrderingSytemAIAnalytics.csproj",
       "packagesPath": "C:\\Users\\IAI-TS\\.nuget\\packages\\",
-      "outputPath": "c:\\Users\\IAI-TS\\source\\repos\\AI_Website\\FoodOrderingSytemAIAnalytics\\obj\\",
+      "outputPath": "C:\\Users\\IAI-TS\\source\\repos\\AI_Website\\FoodOrderingSytemAIAnalytics\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -3821,6 +3849,10 @@
           "Microsoft.EntityFrameworkCore.SqlServer": {
             "target": "Package",
             "version": "[10.0.0, )"
+          },
+          "MiniExcel": {
+            "target": "Package",
+            "version": "[1.43.1, )"
           }
         },
         "imports": [

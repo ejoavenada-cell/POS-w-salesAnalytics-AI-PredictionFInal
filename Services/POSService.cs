@@ -13,6 +13,7 @@ namespace FoodOrderingSytemAIAnalytics.Services
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ITransactionIdGenerator _transactionIdGenerator;
         private const string CartSessionKey = "POS_Cart";
+        private static readonly Random random = new Random();
 
         public POSService(
             ApplicationDbContext context, 
@@ -72,7 +73,8 @@ namespace FoodOrderingSytemAIAnalytics.Services
                     ProductName = product.Name,
                     Price = product.Price,
                     Quantity = quantity,
-                    DiscountPercent = product.DiscountPercent
+                    DiscountPercent = product.DiscountPercent,
+                    ImageUrl = product.ImageUrl
                 });
             }
 
@@ -129,54 +131,82 @@ namespace FoodOrderingSytemAIAnalytics.Services
                     // 1. Generate Receipt ID
                     var receiptId = await _transactionIdGenerator.GenerateNextIdAsync();
 
+                    // Handle Virtual Admin Transaction Ownership
+                    var actualUserId = userId;
+                    if (userId == -999)
+                    {
+                        var fallbackAdmin = await _context.Users.FirstOrDefaultAsync(u => u.Role == "Admin" && u.Id > 0);
+                        if (fallbackAdmin != null) actualUserId = fallbackAdmin.Id;
+                    }
+
                     // 2. Create Transaction record
                     var transaction = new Transaction
                     {
                         TransactionCode = receiptId,
-                        UserId = userId,
+                        UserId = actualUserId,
                         Date = DateTime.Now,
                         TotalAmount = cart.GrandTotal,
                         CashReceived = cashReceived,
-                        Change = cashReceived - cart.GrandTotal
+                        Change = cashReceived - cart.GrandTotal,
+                        IsWeekend = DateTime.Now.DayOfWeek == DayOfWeek.Saturday || DateTime.Now.DayOfWeek == DayOfWeek.Sunday
                     };
 
                     _context.Transactions.Add(transaction);
-                    await _context.SaveChangesAsync(); // Get Transaction Id
+                    // Don't SaveChanges yet, do it all at once
 
                     // 3. Create Details and Update Stock
                     foreach (var item in cart.Items)
                     {
-                        // Atomic Stock Check and Reduction
-                        var stockResult = await _productService.UpdateStockAsync(item.ProductId, -item.Quantity);
+                        // Atomic Stock Check and Reduction (Delayed Save)
+                        var stockResult = await _productService.UpdateStockAsync(item.ProductId, -item.Quantity, false);
                         if (!stockResult.Success)
                         {
-                            throw new Exception($"Stock error for {item.ProductName}: {stockResult.Message}");
+                            throw new InvalidOperationException($"Stock error for {item.ProductName}: {stockResult.Message}");
                         }
 
                         var detail = new TransactionDetail
                         {
-                            TransactionId = transaction.Id,
+                            Transaction = transaction, // Link via object instead of ID before save
                             ProductId = item.ProductId,
                             Quantity = item.Quantity,
-                            Price = item.Price // Capture price at time of sale
+                            Price = item.Price
                         };
                         _context.TransactionDetails.Add(detail);
                     }
 
+                    // FINAL ATOMIC SAVE
                     await _context.SaveChangesAsync();
                     await transactionScope.CommitAsync();
 
                     ClearCart();
                     return (true, "Checkout successful.", receiptId);
                 }
-                catch (DbUpdateException ex)
+                catch (DbUpdateConcurrencyException)
                 {
                     await transactionScope.RollbackAsync();
                     if (attempt == maxRetries)
                     {
-                        return (false, $"Checkout failed due to concurrency conflict: {ex.Message}", null);
+                        return (false, "System is busy with multiple orders. Please try again in a moment.", null);
                     }
-                    // Loop will continue and retry
+                    // Wait a bit before retrying (exponential backoff)
+                    await Task.Delay(random.Next(50, 150) * attempt);
+                }
+                catch (DbUpdateException ex)
+                {
+                    await transactionScope.RollbackAsync();
+                    // Check for Unique Constraint violation or other DB errors
+                    if (attempt == maxRetries)
+                    {
+                        var innerMsg = ex.InnerException?.Message ?? ex.Message;
+                        return (false, $"Database error: {innerMsg}", null);
+                    }
+                    // Wait a bit and retry
+                    await Task.Delay(random.Next(50, 150) * attempt);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    await transactionScope.RollbackAsync();
+                    return (false, ex.Message, null);
                 }
                 catch (Exception ex)
                 {

@@ -29,7 +29,7 @@
 <div class="product-grid" id="productGrid">
     @foreach (var p in Model.Products)
     {
-        <div class="product-card" onclick="addToCart(@p.Id)">
+        <div class="product-card @((p.Stock ?? 0) <= 0 ? "sold-out" : "")" onclick="@((p.Stock ?? 0) > 0 ? $"addToCart({p.Id})" : "void(0)")" style="@((p.Stock ?? 0) <= 0 ? "cursor: not-allowed;" : "")">
             @if (p.IsNew)
             {
                 <span class="card-badge badge-new">NEW</span>
@@ -39,7 +39,18 @@
                 <div class="card-flame"><i class="fas fa-fire"></i></div>
             }
 
-            <div class="product-thumb">
+            <div class="product-thumb" style="position: relative; overflow: hidden;">
+                @if ((p.Stock ?? 0) <= 0)
+                {
+                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 10; display: flex; align-items: center; justify-content: center; pointer-events: none;">
+                        <div style="color: #EF4444; font-weight: 900; font-size: 0.9rem; text-transform: uppercase; transform: rotate(-25deg); white-space: nowrap; -webkit-text-stroke: 1px white; letter-spacing: 0.5px; text-shadow: 0 2px 8px rgba(0,0,0,0.4);">
+                            SOLD OUT
+                        </div>
+                    </div>
+                }
+                
+                <span class="product-code-badge">@p.Code</span>
+                
                 @if (!string.IsNullOrEmpty(p.ImageUrl))
                 {
                     <img src="@p.ImageUrl" alt="@p.Name" />

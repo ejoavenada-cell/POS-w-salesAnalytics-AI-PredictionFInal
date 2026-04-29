@@ -16,6 +16,7 @@ namespace FoodOrderingSytemAIAnalytics.Data
         public DbSet<Transaction> Transactions { get; set; } = null!;
         public DbSet<TransactionDetail> TransactionDetails { get; set; } = null!;
         public DbSet<StoreSetting> StoreSettings { get; set; } = null!;
+        public DbSet<RestockHistory> RestockHistory { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

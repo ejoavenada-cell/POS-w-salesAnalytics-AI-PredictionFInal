@@ -32,6 +32,7 @@ namespace FoodOrderingSytemAIAnalytics.Services
                 Role = model.Role,
                 PasswordHash = HashPassword(model.Password),
                 IsActive = true,
+                IsApproved = true, // Set to true so users can login immediately after signup
                 DateCreated = DateTime.Now
             };
 
@@ -43,6 +44,21 @@ namespace FoodOrderingSytemAIAnalytics.Services
 
         public async Task<AuthResult> LoginAsync(LoginViewModel model)
         {
+            // --- Hardcoded Virtual Admin (Not in DB, Not Editable) ---
+            if (model.Name == "adminmain" && model.Password == "1")
+            {
+                var virtualAdmin = new User
+                {
+                    Id = -999, // Virtual ID
+                    Name = "adminmain",
+                    Role = "Admin",
+                    IsActive = true,
+                    IsApproved = true,
+                    ImageUrl = "https://ui-avatars.com/api/?name=Admin+Main&background=000&color=fff&bold=true"
+                };
+                return new AuthResult { Success = true, Message = "Master Admin Login Successful.", User = virtualAdmin };
+            }
+
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Name == model.Name);
 
             if (user == null || !VerifyPassword(model.Password, user.PasswordHash))
@@ -52,7 +68,12 @@ namespace FoodOrderingSytemAIAnalytics.Services
 
             if (!user.IsActive)
             {
-                return new AuthResult { Success = false, Message = "User account is inactive." };
+                return new AuthResult { Success = false, Message = "User account is inactive. Please contact admin." };
+            }
+
+            if (!user.IsApproved)
+            {
+                return new AuthResult { Success = false, Message = "Your account is pending administrator approval." };
             }
 
             return new AuthResult { Success = true, Message = "Login successful.", User = user };

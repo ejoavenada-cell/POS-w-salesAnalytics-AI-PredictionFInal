@@ -11,8 +11,9 @@ namespace FoodOrderingSytemAIAnalytics.Models.ViewModels
         public bool HasDiscount { get; set; }
         public bool IsNew { get; set; }
         public bool IsTopSelling { get; set; }
-        public int? Stock { get; set; }
+        public decimal? Stock { get; set; }
         public string? ImageUrl { get; set; }
+        public bool IsActive { get; set; }
     }
 
     public class CartItemViewModel
@@ -22,6 +23,7 @@ namespace FoodOrderingSytemAIAnalytics.Models.ViewModels
         public decimal Price { get; set; }
         public int Quantity { get; set; }
         public decimal DiscountPercent { get; set; }
+        public string? ImageUrl { get; set; }
         public decimal Subtotal => (Price * Quantity) * (1 - (DiscountPercent / 100));
     }
 

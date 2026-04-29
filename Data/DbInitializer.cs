@@ -1,7 +1,7 @@
+using FoodOrderingSytemAIAnalytics.Data;
 using FoodOrderingSytemAIAnalytics.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace FoodOrderingSytemAIAnalytics.Data
@@ -10,114 +10,114 @@ namespace FoodOrderingSytemAIAnalytics.Data
     {
         public static void Initialize(ApplicationDbContext context)
         {
-            context.Database.EnsureCreated();
-
-            // Safety check for missing Categories table (EnsureCreated doesn't update existing schemas)
-            context.Database.ExecuteSqlRaw(@"
-                IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Categories]') AND type in (N'U'))
+            // Ensure existing tables are updated to decimal
+            string alterTablesSql = @"
+                IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Products]') AND name = 'Stock' AND (type_name(system_type_id) = 'int' OR type_name(system_type_id) = 'numeric'))
                 BEGIN
-                    CREATE TABLE [dbo].[Categories] (
-                        [Id] INT IDENTITY(1,1) PRIMARY KEY,
-                        [Name] NVARCHAR(50) NOT NULL,
-                        [Icon] NVARCHAR(50) NOT NULL,
-                        [IsActive] BIT NOT NULL DEFAULT 1
+                    ALTER TABLE [dbo].[Products] ALTER COLUMN [Stock] decimal(18,2) NULL;
+                END
+
+                IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[TransactionDetails]') AND name = 'Quantity' AND type_name(system_type_id) = 'int')
+                BEGIN
+                    IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[TransactionDetails]') AND name = 'Subtotal' AND is_computed = 1)
+                    BEGIN
+                        ALTER TABLE [dbo].[TransactionDetails] DROP COLUMN [Subtotal];
+                    END
+                    
+                    ALTER TABLE [dbo].[TransactionDetails] ALTER COLUMN [Quantity] decimal(18,2) NOT NULL;
+                    
+                    ALTER TABLE [dbo].[TransactionDetails] ADD [Subtotal] AS ([Quantity] * [Price]);
+                END
+
+                IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[RestockHistory]') AND type in (N'U'))
+                BEGIN
+                    CREATE TABLE [dbo].[RestockHistory] (
+                        [Id] int IDENTITY(1,1) NOT NULL,
+                        [ProductId] int NOT NULL,
+                        [QuantityRestocked] decimal(18,2) NOT NULL,
+                        [RestockDate] datetime2 NOT NULL,
+                        [Remarks] nvarchar(max) NULL,
+                        [StockAfterRestock] decimal(18,2) NOT NULL,
+                        CONSTRAINT [PK_RestockHistory] PRIMARY KEY ([Id]),
+                        CONSTRAINT [FK_RestockHistory_Products_ProductId] FOREIGN KEY ([ProductId]) REFERENCES [dbo].[Products] ([Id]) ON DELETE CASCADE
                     );
+                    CREATE INDEX [IX_RestockHistory_ProductId] ON [dbo].[RestockHistory] ([ProductId]);
                 END
-            ");
-
-            // Safety check for missing User ImageUrl column
-            context.Database.ExecuteSqlRaw(@"
-                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Users]') AND name = 'ImageUrl')
+                ELSE
                 BEGIN
-                    ALTER TABLE [dbo].[Users] ADD [ImageUrl] NVARCHAR(500) NULL;
+                    IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[RestockHistory]') AND name = 'QuantityRestocked' AND type_name(system_type_id) = 'int')
+                    BEGIN
+                        ALTER TABLE [dbo].[RestockHistory] ALTER COLUMN [QuantityRestocked] decimal(18,2) NOT NULL;
+                        ALTER TABLE [dbo].[RestockHistory] ALTER COLUMN [StockAfterRestock] decimal(18,2) NOT NULL;
+                    END
                 END
-
-                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Transactions]') AND name = 'IsWeekend')
+                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[StoreSettings]') AND name = 'AIForecastHorizonHours')
                 BEGIN
-                    ALTER TABLE [dbo].[Transactions] ADD [IsWeekend] BIT NOT NULL DEFAULT 0;
+                    ALTER TABLE [dbo].[StoreSettings] ADD [AIForecastHorizonHours] int NOT NULL DEFAULT 720;
+                    ALTER TABLE [dbo].[StoreSettings] ADD [AISensitivity] float NOT NULL DEFAULT 0.1;
+                    ALTER TABLE [dbo].[StoreSettings] ADD [AISeasonalityMode] nvarchar(max) NOT NULL DEFAULT 'multiplicative';
                 END
-            ");
-
-            // Safety check for missing StoreSettings table
-            context.Database.ExecuteSqlRaw(@"
-                IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[StoreSettings]') AND type in (N'U'))
+                
+                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[StoreSettings]') AND name = 'LastAISync')
                 BEGIN
-                    CREATE TABLE [dbo].[StoreSettings] (
-                        [Id] INT IDENTITY(1,1) PRIMARY KEY,
-                        [StoreName] NVARCHAR(100) NOT NULL,
-                        [LogoUrl] NVARCHAR(500) NULL,
-                        [CurrencySymbol] NVARCHAR(10) NOT NULL DEFAULT '₱'
-                    );
-                END
-            ");
+                    ALTER TABLE [dbo].[StoreSettings] ADD [LastAISync] datetime2 NULL;
+                END";
+            
+            context.Database.ExecuteSqlRaw(alterTablesSql);
+            
+            // Call individual seeders
+            SeedProducts(context);
+            SeedRestockHistory(context);
+        }
 
-            // Seed Settings
-            if (!context.StoreSettings.Any())
+        public static void SeedProducts(ApplicationDbContext context)
+        {
+            var seedProducts = new List<Product>
             {
-                context.StoreSettings.Add(new StoreSetting { StoreName = "Tasty Station", LogoUrl = "/images/logo.png" });
-                context.SaveChanges();
-            }
-
-            // Seed Categories
-            if (!context.Categories.Any())
-            {
-                var categories = new List<Category>
-                {
-                    new Category { Name = "Burger", Icon = "fas fa-hamburger" },
-                    new Category { Name = "Pizza", Icon = "fas fa-pizza-slice" },
-                    new Category { Name = "Ice Cream", Icon = "fas fa-ice-cream" },
-                    new Category { Name = "Juice", Icon = "fas fa-glass-whiskey" }
-                };
-                context.Categories.AddRange(categories);
-                context.SaveChanges();
-            }
-
-            var products = new List<Product>
-            {
-                // Burger Category
-                new Product { Name = "Classic Chicken Burger", Code = "BRG-001", Price = 5.47m, Category = "Burger", Stock = 100, IsActive = true, DateIntroduced = DateTime.Now.AddDays(-60), ImageUrl = "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&h=400" },
-                new Product { Name = "Double Cheese Burger", Code = "BRG-002", Price = 6.10m, Category = "Burger", Stock = 100, IsActive = true, DateIntroduced = DateTime.Now.AddDays(-30), ImageUrl = "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=400&h=400" },
-                new Product { Name = "Spicy Zinger Burger", Code = "BRG-003", Price = 5.99m, Category = "Burger", Stock = 80, IsActive = true, DateIntroduced = DateTime.Now.AddDays(-5), ImageUrl = "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?auto=format&fit=crop&w=400&h=400" },
-
-                // Pizza Category
-                new Product { Name = "Margherita Pizza", Code = "PZ-001", Price = 7.00m, Category = "Pizza", Stock = 50, IsActive = true, DateIntroduced = DateTime.Now.AddDays(-45), ImageUrl = "https://images.unsplash.com/photo-1574071318508-1cdbad80ad50?auto=format&fit=crop&w=400&h=400" },
-                new Product { Name = "Chicken Mushroom Pizza", Code = "PZ-002", Price = 8.50m, Category = "Pizza", Stock = 40, IsActive = true, DateIntroduced = DateTime.Now.AddDays(-15), ImageUrl = "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=400&h=400" },
-                new Product { Name = "Pepperoni Feast", Code = "PZ-003", Price = 9.00m, Category = "Pizza", Stock = 30, IsActive = true, DateIntroduced = DateTime.Now.AddDays(-2), ImageUrl = "https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=400&h=400" },
-
-                // Ice Cream / Desserts
-                new Product { Name = "Triple Scope Vanilla", Code = "IC-001", Price = 2.47m, Category = "Ice Cream", Stock = 200, IsActive = true, DateIntroduced = DateTime.Now.AddDays(-10), ImageUrl = "https://images.unsplash.com/photo-1501443762994-82bd5dace89a?auto=format&fit=crop&w=400&h=400" },
-                new Product { Name = "Chocolate Lava Cake", Code = "IC-002", Price = 4.50m, Category = "Ice Cream", Stock = 50, IsActive = true, DateIntroduced = DateTime.Now.AddDays(-20), ImageUrl = "https://images.unsplash.com/photo-1624353365286-3f8d62ffff51?auto=format&fit=crop&w=400&h=400" },
-
-                // Drinks / Juice
-                new Product { Name = "Fresh Orange Juice", Code = "DRK-001", Price = 1.20m, Category = "Juice", Stock = 150, IsActive = true, DateIntroduced = DateTime.Now.AddDays(-90), ImageUrl = "https://images.unsplash.com/photo-1613478223719-2ab802602423?auto=format&fit=crop&w=400&h=400" },
-                new Product { Name = "Iced Coffee Latte", Code = "DRK-002", Price = 2.50m, Category = "Juice", Stock = 100, IsActive = true, DateIntroduced = DateTime.Now.AddDays(-1), ImageUrl = "https://images.unsplash.com/photo-1517701604599-bb29b565090c?auto=format&fit=crop&w=400&h=400" }
+                new Product { Code = "P-001", Name = "Signature Burger", Price = 12.99m, Stock = 100, Category = "Meals", IsActive = true, DateIntroduced = DateTime.Now.AddMonths(-3) },
+                new Product { Code = "P-002", Name = "Crispy Fries", Price = 4.50m, Stock = 200, Category = "Sides", IsActive = true, DateIntroduced = DateTime.Now.AddMonths(-3) },
+                new Product { Code = "P-003", Name = "Coca Cola", Price = 2.50m, Stock = 150, Category = "Drinks", IsActive = true, DateIntroduced = DateTime.Now.AddMonths(-3) },
+                new Product { Code = "P-004", Name = "Chocolate Sundae", Price = 5.99m, Stock = 50, Category = "Desserts", IsActive = true, DateIntroduced = DateTime.Now.AddMonths(-3) },
+                new Product { Code = "P-005", Name = "Chicken Nuggets", Price = 8.00m, Stock = 80, Category = "Meals", IsActive = true, DateIntroduced = DateTime.Now.AddMonths(-3) },
+                new Product { Code = "P-006", Name = "Red Wine", Price = 45.00m, Stock = 20, Category = "Drinks", IsActive = true, DateIntroduced = DateTime.Now.AddMonths(-2) },
+                new Product { Code = "P-007", Name = "Grilled Salmon", Price = 24.50m, Stock = 15, Category = "Meals", IsActive = true, DateIntroduced = DateTime.Now.AddMonths(-1) },
+                new Product { Code = "P-008", Name = "Caesar Salad", Price = 9.99m, Stock = 40, Category = "Sides", IsActive = true, DateIntroduced = DateTime.Now.AddMonths(-1) }
             };
 
-            foreach (Product p in products)
+            foreach (var p in seedProducts)
             {
-                if (!context.Products.Any(dbP => dbP.Code == p.Code))
+                if (!context.Products.Any(x => x.Code == p.Code))
                 {
                     context.Products.Add(p);
                 }
             }
             context.SaveChanges();
+        }
 
-            // Add Admin user if not exists
-            if (!context.Users.Any(u => u.Name == "Admin"))
+        public static void SeedRestockHistory(ApplicationDbContext context)
+        {
+            if (context.RestockHistory.Any()) return;
+
+            var products = context.Products.ToList();
+            var rand = new Random();
+
+            foreach (var product in products)
             {
-                context.Users.Add(new User
+                // Create 3-4 restock events in the last month
+                for (int i = 0; i < 4; i++)
                 {
-                    Name = "Admin",
-                    Role = "Admin",
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
-                    IsActive = true,
-                    DateCreated = DateTime.Now,
-                    Age = 30,
-                    Sex = "Other",
-                    ImageUrl = "https://ui-avatars.com/api/?name=Admin&background=4F46E5&color=fff"
-                });
-                context.SaveChanges();
+                    var date = DateTime.Now.AddDays(-rand.Next(1, 30));
+                    context.RestockHistory.Add(new RestockHistory
+                    {
+                        ProductId = product.Id,
+                        QuantityRestocked = rand.Next(100, 300),
+                        RestockDate = date,
+                        StockAfterRestock = 500 - rand.Next(0, 50), // Simulation
+                        Remarks = "Initial Seed Restock"
+                    });
+                }
             }
+            context.SaveChanges();
         }
     }
 }

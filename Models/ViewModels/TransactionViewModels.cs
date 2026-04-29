@@ -26,7 +26,7 @@ namespace FoodOrderingSytemAIAnalytics.Models.ViewModels
         public string ProductName { get; set; } = string.Empty;
         public string? Category { get; set; }
         public string? ImageUrl { get; set; }
-        public int QuantitySold { get; set; }
+        public decimal QuantitySold { get; set; }
         public decimal TotalRevenue { get; set; }
         public double GrowthPercentage { get; set; }
     }

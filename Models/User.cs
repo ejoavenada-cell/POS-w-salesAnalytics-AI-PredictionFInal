@@ -27,6 +27,7 @@ namespace FoodOrderingSytemAIAnalytics.Models
         public string PasswordHash { get; set; } = string.Empty;
 
         public bool IsActive { get; set; } = true;
+        public bool IsApproved { get; set; } = false;
 
         public DateTime DateCreated { get; set; } = DateTime.Now;
 

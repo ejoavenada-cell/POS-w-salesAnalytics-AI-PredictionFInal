@@ -18,5 +18,12 @@ namespace FoodOrderingSytemAIAnalytics.Models
         public Microsoft.AspNetCore.Http.IFormFile? LogoFile { get; set; }
 
         public string CurrencySymbol { get; set; } = "₱";
+        public string PrimaryColor { get; set; } = "#2D9F96";
+        
+        // AI Tuning Parameters
+        public int AIForecastHorizonHours { get; set; } = 720; // Default 30 days
+        public double AISensitivity { get; set; } = 0.1; // changepoint_prior_scale
+        public string AISeasonalityMode { get; set; } = "multiplicative";
+        public DateTime? LastAISync { get; set; }
     }
 }

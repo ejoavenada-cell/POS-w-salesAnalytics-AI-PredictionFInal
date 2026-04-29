@@ -6,52 +6,228 @@
     var settings = _context.StoreSettings.FirstOrDefault() ?? new FoodOrderingSytemAIAnalytics.Models.StoreSetting();
 }
 
-<div class="login-container" style="background: linear-gradient(135deg, #2D9F96 0%, #1a5e59 100%);">
-    <div class="login-card" style="border-radius: 24px; padding: 3rem;">
-        <div class="login-header">
-            <div style="width: 80px; height: 80px; background: white; border-radius: 20px; display: flex; align-items: center; justify-content: center; color: var(--primary-color); font-size: 2.5rem; margin: 0 auto 1.5rem; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+<div class="auth-wrapper">
+    <!-- Fixed Background Decor -->
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <style>
+        :root {
+            --card-bg: rgba(255, 255, 255, 0.98);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        .auth-wrapper {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #0F172A 100%);
+            min-height: 100vh;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem 1rem;
+            position: relative;
+            overflow-x: hidden;
+            overflow-y: auto;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            z-index: 1;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .blob-1 {
+            width: 600px; height: 600px;
+            background: var(--primary-color);
+            top: -200px; right: -150px;
+            animation: float 30s infinite alternate;
+        }
+
+        .blob-2 {
+            width: 500px; height: 500px;
+            background: #4F46E5;
+            bottom: -150px; left: -150px;
+            animation: float 22s infinite alternate-reverse;
+        }
+
+        @@keyframes float {
+            from { transform: translate(0, 0) scale(1); }
+            to { transform: translate(80px, 80px) scale(1.1); }
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border-radius: 48px;
+            padding: 3rem;
+            width: 100%;
+            max-width: 460px;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255, 255, 255, 1);
+            position: relative;
+            z-index: 10;
+            margin: auto;
+            flex-shrink: 0;
+        }
+
+        .logo-box {
+            width: 100px;
+            height: 100px;
+            background: white;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+            border: 1.5px solid #F1F5F9;
+        }
+
+        .logo-box img { width: 100%; height: 100%; object-fit: contain; padding: 12px; }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 1.25rem;
+            width: 100%;
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 1.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94A3B8;
+            font-size: 1.15rem;
+            z-index: 5;
+        }
+
+        .input-field {
+            height: 68px;
+            border-radius: 22px;
+            border: 2.5px solid #E2E8F0;
+            padding: 0 1.5rem 0 4rem;
+            width: 100%;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #1E293B;
+            background: #F8FAFC;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            outline: none;
+            display: block;
+        }
+
+        .input-field:focus {
+            border-color: var(--primary-color);
+            background: white;
+            box-shadow: 0 0 0 6px var(--primary-light);
+        }
+
+        .input-field:focus + i {
+            color: var(--primary-color);
+        }
+
+        .login-btn {
+            height: 68px;
+            border-radius: 22px;
+            font-size: 1.2rem;
+            font-weight: 900;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 20px 40px -10px var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 30px 60px -15px var(--primary-color);
+            filter: brightness(1.1);
+        }
+
+        @@media (max-width: 500px) {
+            .glass-card { padding: 2rem; border-radius: 36px; }
+            .input-field, .login-btn { height: 64px; }
+            .logo-box { width: 80px; height: 80px; margin-bottom: 1.5rem; }
+        }
+    </style>
+
+    <div class="glass-card">
+        <div style="text-align: center; margin-bottom: 1rem;">
+            <div class="logo-box">
                 @if (!string.IsNullOrEmpty(settings.LogoUrl))
                 {
-                    <img src="@settings.LogoUrl" style="width: 100%; height: 100%; object-fit: contain;" />
+                    <img src="@settings.LogoUrl" />
                 }
                 else
                 {
-                    <i class="fas fa-utensils"></i>
+                    <i class="fas fa-utensils" style="font-size: 2.5rem; color: var(--primary-color);"></i>
                 }
             </div>
-            <h1 style="font-size: 2rem; font-weight: 800; color: #1F2937;">@settings.StoreName</h1>
-            <p style="color: var(--text-muted); margin-top: 0.5rem; font-weight: 500;">Please enter your credentials</p>
         </div>
 
-        <form asp-action="Login" method="post">
-            <div asp-validation-summary="ModelOnly" class="error-message" style="margin-bottom: 1rem; text-align: center;"></div>
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div style="background: rgba(16, 185, 129, 0.1); color: #059669; padding: 1.25rem; border-radius: 20px; font-weight: 800; font-size: 0.9rem; margin-bottom: 2rem; border: 1px solid rgba(16, 185, 129, 0.2); display: flex; align-items: center; gap: 0.75rem;">
+                <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+            </div>
+        }
 
-            <div class="form-group">
-                <label asp-for="Name" style="font-weight: 600; color: #4B5563;">Username</label>
-                <input asp-for="Name" class="form-control" placeholder="admin / staff" style="height: 52px; border-radius: 12px; border: 2px solid #F3F4F6; background: #F9FAFB;" />
-                <span asp-validation-for="Name" class="error-message"></span>
+        <form asp-action="Login" method="post" style="width: 100%;">
+            <div asp-validation-summary="ModelOnly" style="color: #EF4444; font-size: 0.9rem; font-weight: 800; text-align: center; background: #FEF2F2; padding: 1.25rem; border-radius: 20px; border: 1.5px solid #FEE2E2; margin-bottom: 2rem;"></div>
+
+            <div class="input-group">
+                <i class="fas fa-user"></i>
+                <input asp-for="Name" class="input-field" placeholder="Username" required autocomplete="username" />
+                <span asp-validation-for="Name" style="color: #EF4444; font-size: 0.75rem; font-weight: 700; margin-top: 0.5rem; display: block; padding-left: 0.5rem;"></span>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Password" style="font-weight: 600; color: #4B5563;">Password</label>
-                <input asp-for="Password" type="password" class="form-control" placeholder="••••••••" style="height: 52px; border-radius: 12px; border: 2px solid #F3F4F6; background: #F9FAFB;" />
-                <span asp-validation-for="Password" class="error-message"></span>
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <input asp-for="Password" type="password" class="input-field" placeholder="Password" required autocomplete="current-password" />
+                <span asp-validation-for="Password" style="color: #EF4444; font-size: 0.75rem; font-weight: 700; margin-top: 0.5rem; display: block; padding-left: 0.5rem;"></span>
             </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <input type="checkbox" id="remember" style="width: 18px; height: 18px; accent-color: var(--primary-color);">
-                    <label for="remember" style="font-size: 0.875rem; color: #6B7280; font-weight: 500;">Remember me</label>
-                </div>
-                <a href="#" style="font-size: 0.875rem; color: var(--primary-color); font-weight: 600; text-decoration: none;">Forgot password?</a>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin: 0.5rem 0 2rem; padding: 0 0.5rem;">
+                <label style="display: flex; align-items: center; gap: 0.8rem; cursor: pointer; color: #475569; font-weight: 700; font-size: 0.95rem;">
+                    <input type="checkbox" style="width: 22px; height: 22px; accent-color: var(--primary-color); cursor: pointer; border-radius: 6px;">
+                    Stay logged in
+                </label>
+                <a href="#" style="font-size: 0.95rem; color: var(--primary-color); font-weight: 900; text-decoration: none;">Help?</a>
             </div>
 
-            <button type="submit" class="btn-primary" style="height: 56px; border-radius: 16px; font-size: 1.125rem; font-weight: 700; background: var(--primary-color); box-shadow: 0 10px 15px -3px rgba(45, 159, 150, 0.3);">Sign In</button>
+            <button type="submit" class="login-btn">
+                Login <i class="fas fa-arrow-right"></i>
+            </button>
         </form>
 
-        <div style="margin-top: 2rem; text-align: center; font-size: 0.875rem;">
-            <span style="color: var(--text-muted); font-weight: 500;">New staff member?</span>
-            <a href="@Url.Action("Register", "Auth")" style="color: var(--primary-color); text-decoration: none; font-weight: 700;">Join our team</a>
+        <div style="margin-top: 2rem; text-align: center; border-top: 2.5px solid #F1F5F9; padding-top: 2rem;">
+            <p style="color: #64748B; font-weight: 600; font-size: 0.95rem; margin-bottom: 1rem;">New Staff?</p>
+            <a href="@Url.Action("Register", "Auth")" style="color: var(--primary-color); font-weight: 900; font-size: 1.1rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: 0.3s;" onmouseover="this.style.gap='0.8rem'" onmouseout="this.style.gap='0.5rem'">
+                Create Account <i class="fas fa-chevron-right" style="font-size: 0.8rem;"></i>
+            </a>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

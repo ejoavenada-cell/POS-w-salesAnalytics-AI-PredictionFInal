@@ -11,6 +11,21 @@
         gap: 2.5rem;
         margin-top: 1rem;
     }
+
+    @@media (max-width: 1300px) {
+        .ai-container {
+            grid-template-columns: 1fr;
+        }
+        .metric-grid {
+            grid-template-columns: 1fr 1fr !important;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .metric-grid {
+            grid-template-columns: 1fr !important;
+        }
+    }
     .report-card {
         background: white;
         border-radius: 32px;
@@ -80,7 +95,11 @@
     <div class="report-card">
         <div class="ai-status-chip">
             <div class="status-dot"></div>
-            Neural Model Alpha-7 Active
+            @if (Model.LastAISync != "Simulation") {
+                <span>Prophet Model v1.2.4 Active</span>
+            } else {
+                <span>Simulation Engine Active</span>
+            }
         </div>
         
         <h1 style="font-size: 2.5rem; font-weight: 900; color: #111827; margin-bottom: 1rem;">Performance Forecast</h1>
@@ -91,15 +110,15 @@
         <div class="metric-grid">
             <div class="metric-box">
                 <div style="font-size: 0.75rem; font-weight: 800; color: #9CA3AF; text-transform: uppercase; margin-bottom: 0.75rem;">Confidence Score</div>
-                <div style="font-size: 2rem; font-weight: 900; color: var(--primary-color);">94.2%</div>
+                <div style="font-size: 2rem; font-weight: 900; color: var(--primary-color);">@Model.ConfidenceScore.ToString("N1")%</div>
             </div>
             <div class="metric-box">
                 <div style="font-size: 0.75rem; font-weight: 800; color: #9CA3AF; text-transform: uppercase; margin-bottom: 0.75rem;">Trend Velocity</div>
-                <div style="font-size: 2rem; font-weight: 900; color: #3B82F6;">+1.4x</div>
+                <div style="font-size: 2rem; font-weight: 900; color: #3B82F6;">@Model.TrendVelocity</div>
             </div>
             <div class="metric-box">
                 <div style="font-size: 0.75rem; font-weight: 800; color: #9CA3AF; text-transform: uppercase; margin-bottom: 0.75rem;">Churn Risk</div>
-                <div style="font-size: 2rem; font-weight: 900; color: #EF4444;">Low</div>
+                <div style="font-size: 2rem; font-weight: 900; color: #EF4444;">@Model.ChurnRisk</div>
             </div>
         </div>
 
@@ -145,6 +164,40 @@
     </div>
 </div>
 
+<div class="report-card" style="margin-top: 2.5rem;">
+    <h3 style="font-size: 1.5rem; font-weight: 900; color: #1F2937; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem;">
+        <i class="fas fa-calendar-alt" style="color: var(--primary-color);"></i>
+        7-Day Neural Sales Projection
+    </h3>
+    <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+        <thead>
+            <tr style="text-align: left; border-bottom: 2px solid #F3F4F6;">
+                <th style="padding: 1.25rem 1rem; color: #9CA3AF; font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">Date</th>
+                <th style="padding: 1.25rem 1rem; color: #9CA3AF; font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">Predicted Revenue</th>
+                <th style="padding: 1.25rem 1rem; color: #9CA3AF; font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">Growth Index</th>
+                <th style="padding: 1.25rem 1rem; color: #9CA3AF; font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">Confidence Interval</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var day in Model.ForecastData)
+            {
+                <tr style="border-bottom: 1px solid #F3F4F6; transition: background 0.2s;">
+                    <td style="padding: 1.25rem 1rem; font-weight: 700; color: #1F2937;">@day.Date.ToString("ddd, MMM dd")</td>
+                    <td style="padding: 1.25rem 1rem; font-weight: 900; color: var(--primary-color);">₱@day.PredictedRevenue.ToString("N2")</td>
+                    <td style="padding: 1.25rem 1rem;">
+                        <span style="padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.7rem; font-weight: 800; background: #F0FDF4; color: #16A34A;">STABLE GROWTH</span>
+                    </td>
+                    <td style="padding: 1.25rem 1rem;">
+                        <div style="width: 100px; height: 6px; background: #E5E7EB; border-radius: 10px; overflow: hidden;">
+                            <div style="width: 94%; height: 100%; background: var(--primary-color); border-radius: 10px;"></div>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
@@ -154,7 +207,7 @@
             data: {
                 labels: ['W1', 'W2', 'W3', 'W4'],
                 datasets: [{
-                    data: [88, 91, 89, 94.2],
+                    data: @Html.Raw(Json.Serialize(Model.AccuracyTrend)),
                     borderColor: '#2D9F96',
                     tension: 0.4,
                     borderWidth: 3,
