@@ -53,9 +53,18 @@ namespace FoodOrderingSytemAIAnalytics.Data
                 Console.WriteLine(">>> DB: Initializing PostgreSQL Schema...");
                 try 
                 {
+                    // Check for RESET_DB environment variable
+                    if (Environment.GetEnvironmentVariable("RESET_DB") == "true")
+                    {
+                        Console.WriteLine(">>> DB: RESET_DB is true. Deleting old database...");
+                        context.Database.EnsureDeleted();
+                        Console.WriteLine(">>> DB: Old database deleted.");
+                    }
+
                     // For Postgres, EnsureCreated is the most reliable way to build a fresh schema
-                    context.Database.EnsureCreated();
-                    Console.WriteLine(">>> DB: PostgreSQL Schema Verified.");
+                    bool created = context.Database.EnsureCreated();
+                    if (created) Console.WriteLine(">>> DB: Fresh Database Created.");
+                    else Console.WriteLine(">>> DB: Database already exists.");
                 }
                 catch (Exception ex)
                 {
