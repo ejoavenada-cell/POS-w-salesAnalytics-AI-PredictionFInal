@@ -12,7 +12,6 @@ namespace FoodOrderingSytemAIAnalytics.Data
         {
             if (context.Database.IsSqlServer())
             {
-                // SQL Server specific logic (omitted for brevity but kept in original)
                 context.Database.EnsureCreated();
             }
             else
@@ -20,7 +19,20 @@ namespace FoodOrderingSytemAIAnalytics.Data
                 Console.WriteLine(">>> DB: Brute-Force Initializing PostgreSQL Schema...");
                 try 
                 {
-                    // Manually create tables to ensure they exist with correct lowercase names
+                    if (Environment.GetEnvironmentVariable("RESET_DB") == "true")
+                    {
+                        Console.WriteLine(">>> DB: RESET_DB is true. Dropping all tables...");
+                        context.Database.ExecuteSqlRaw(@"
+                            DROP TABLE IF EXISTS restockhistory CASCADE;
+                            DROP TABLE IF EXISTS transactiondetails CASCADE;
+                            DROP TABLE IF EXISTS transactions CASCADE;
+                            DROP TABLE IF EXISTS products CASCADE;
+                            DROP TABLE IF EXISTS categories CASCADE;
+                            DROP TABLE IF EXISTS storesettings CASCADE;
+                            DROP TABLE IF EXISTS users CASCADE;
+                        ");
+                    }
+
                     string manualSql = @"
                         CREATE TABLE IF NOT EXISTS users (
                             id SERIAL PRIMARY KEY,
@@ -32,13 +44,13 @@ namespace FoodOrderingSytemAIAnalytics.Data
                             isactive BOOLEAN,
                             isapproved BOOLEAN,
                             imageurl TEXT,
-                            datecreated TIMESTAMP
+                            datecreated TIMESTAMP,
+                            rowversion BYTEA
                         );
                         CREATE TABLE IF NOT EXISTS storesettings (
                             id SERIAL PRIMARY KEY,
                             storename TEXT,
                             currencysymbol TEXT,
-                            taxrate DECIMAL,
                             primarycolor TEXT,
                             logourl TEXT,
                             aiforecasthorizonhours INTEGER,
@@ -61,26 +73,28 @@ namespace FoodOrderingSytemAIAnalytics.Data
                             stock DECIMAL,
                             category TEXT,
                             imageurl TEXT,
+                            discountpercent DECIMAL DEFAULT 0,
                             isactive BOOLEAN,
-                            dateintroduced TIMESTAMP
+                            dateintroduced TIMESTAMP,
+                            rowversion BYTEA
                         );
                         CREATE TABLE IF NOT EXISTS transactions (
                             id SERIAL PRIMARY KEY,
-                            transactionid TEXT UNIQUE,
+                            transactioncode TEXT UNIQUE NOT NULL,
                             userid INTEGER REFERENCES users(id),
-                            totalamount DECIMAL,
-                            discountamount DECIMAL,
-                            finalamount DECIMAL,
-                            paymentmethod TEXT,
-                            transactiondate TIMESTAMP,
-                            status TEXT
+                            date TIMESTAMP NOT NULL,
+                            totalamount DECIMAL NOT NULL,
+                            cashreceived DECIMAL NOT NULL,
+                            change DECIMAL NOT NULL,
+                            isweekend BOOLEAN,
+                            rowversion BYTEA
                         );
                         CREATE TABLE IF NOT EXISTS transactiondetails (
                             id SERIAL PRIMARY KEY,
                             transactionid INTEGER REFERENCES transactions(id),
                             productid INTEGER REFERENCES products(id),
-                            quantity DECIMAL,
-                            price DECIMAL,
+                            quantity DECIMAL NOT NULL,
+                            price DECIMAL NOT NULL,
                             subtotal DECIMAL
                         );
                         CREATE TABLE IF NOT EXISTS restockhistory (
@@ -94,17 +108,14 @@ namespace FoodOrderingSytemAIAnalytics.Data
 
                     context.Database.ExecuteSqlRaw(manualSql);
                     Console.WriteLine(">>> DB: Manual Schema Creation Finished.");
-                    
-                    // Now try to let EF Core fill in any blanks
                     context.Database.EnsureCreated();
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($">>> DB ERROR during manual creation: {ex.Message}");
+                    Console.WriteLine($">>> DB ERROR: {ex.Message}");
                 }
             }
             
-            // Seed Data
             try 
             {
                 SeedStoreSettings(context);
