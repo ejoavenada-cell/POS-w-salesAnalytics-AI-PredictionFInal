@@ -78,8 +78,7 @@ namespace FoodOrderingSytemAIAnalytics.Data
                 context.StoreSettings.Add(new StoreSetting
                 {
                     StoreName = "Tasty Station",
-                    CurrencySymbol = "$",
-                    TaxRate = 0.08m,
+                    CurrencySymbol = "₱",
                     AIForecastHorizonHours = 720,
                     AISensitivity = 0.1,
                     AISeasonalityMode = "multiplicative"
