@@ -14,7 +14,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     var sqlConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
     
     // Render typically provides DATABASE_URL
-    var pgConnectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
+    var pgConnectionString = Environment.GetEnvironmentVariable("DATABASE_URL")?.Trim();
     
     // Check if we are running on Render
     bool isRender = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("RENDER"));
@@ -25,24 +25,24 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         
         try 
         {
-            // Parse the postgres://user:pass@host:port/database URL
             var uri = new Uri(pgConnectionString);
-            var userInfo = uri.UserInfo.Split(':');
+            var host = uri.Host;
+            var port = uri.Port > 0 ? uri.Port : 5432;
+            var database = uri.AbsolutePath.TrimStart('/');
+            var user = uri.UserInfo.Split(':')[0];
+            var password = uri.UserInfo.Split(':')[1];
 
-            var port = uri.Port <= 0 ? 5432 : uri.Port;
-            var connStr = $"Host={uri.Host};" +
-                          $"Port={port};" +
-                          $"Username={userInfo[0]};" +
-                          $"Password={userInfo[1]};" +
-                          $"Database={uri.LocalPath.TrimStart('/')};" +
-                          $"Ssl Mode=Require;Trust Server Certificate=true;";
+            var connStr = $"Host={host};Port={port};Username={user};Password={password};Database={database};Ssl Mode=Require;Trust Server Certificate=true;";
+            
+            Console.WriteLine($">>> Parsed Host: {host}");
+            Console.WriteLine($">>> Parsed Database: {database}");
 
             options.UseNpgsql(connStr);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($">>> ERROR Parsing DATABASE_URL: {ex.Message}");
-            // Fallback to trying the string as-is if it's not a URI
+            Console.WriteLine($">>> CRITICAL: URL Parsing Failed: {ex.Message}");
+            // Final fallback attempt
             options.UseNpgsql(pgConnectionString);
         }
     }
