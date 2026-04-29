@@ -5,6 +5,9 @@ using FoodOrderingSytemAIAnalytics.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Enable legacy timestamp behavior for PostgreSQL compatibility with DateTime.Now
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 

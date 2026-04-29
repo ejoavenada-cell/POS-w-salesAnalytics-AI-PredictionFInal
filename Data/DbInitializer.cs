@@ -132,12 +132,32 @@ namespace FoodOrderingSytemAIAnalytics.Data
             try 
             {
                 SeedStoreSettings(context);
+                SeedUsers(context);
                 SeedProducts(context);
                 Console.WriteLine(">>> DB: Seeding Complete.");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($">>> DB SEED ERROR: {ex.Message}");
+            }
+        }
+
+        public static void SeedUsers(ApplicationDbContext context)
+        {
+            if (!context.Users.Any())
+            {
+                context.Users.Add(new User
+                {
+                    Name = "admin_fallback",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123"), // Requires BCrypt package, or just raw string if hash is checked later
+                    Role = "Admin",
+                    Age = 30,
+                    Sex = "M",
+                    IsActive = true,
+                    IsApproved = true,
+                    DateCreated = DateTime.Now
+                });
+                context.SaveChanges();
             }
         }
 
@@ -167,6 +187,33 @@ namespace FoodOrderingSytemAIAnalytics.Data
                 new Product { Code = "P-003", Name = "Coca Cola", Price = 2.50m, Stock = 150, Category = "Drinks", IsActive = true, DateIntroduced = DateTime.Now.AddMonths(-3) }
             };
             context.Products.AddRange(seedProducts);
+            context.SaveChanges();
+            
+            // Seed Restock History after products
+            SeedRestockHistory(context);
+        }
+
+        public static void SeedRestockHistory(ApplicationDbContext context)
+        {
+            if (context.RestockHistory.Any()) return;
+
+            var products = context.Products.ToList();
+            var rand = new Random();
+
+            foreach (var product in products)
+            {
+                for (int i = 0; i < 2; i++)
+                {
+                    context.RestockHistory.Add(new RestockHistory
+                    {
+                        ProductId = product.Id,
+                        QuantityRestocked = rand.Next(50, 150),
+                        RestockDate = DateTime.Now.AddDays(-rand.Next(1, 30)),
+                        StockAfterRestock = product.Stock ?? 100,
+                        Remarks = "Initial Seed Restock"
+                    });
+                }
+            }
             context.SaveChanges();
         }
     }
