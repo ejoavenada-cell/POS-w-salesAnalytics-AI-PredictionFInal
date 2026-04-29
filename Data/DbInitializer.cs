@@ -107,7 +107,20 @@ namespace FoodOrderingSytemAIAnalytics.Data
                         );";
 
                     context.Database.ExecuteSqlRaw(manualSql);
-                    Console.WriteLine(">>> DB: Manual Schema Creation Finished.");
+                    
+                    // Patch existing tables (in case CREATE TABLE IF NOT EXISTS skipped creation)
+                    string patchSql = @"
+                        ALTER TABLE users ADD COLUMN IF NOT EXISTS rowversion BYTEA;
+                        ALTER TABLE products ADD COLUMN IF NOT EXISTS discountpercent DECIMAL DEFAULT 0;
+                        ALTER TABLE products ADD COLUMN IF NOT EXISTS rowversion BYTEA;
+                        ALTER TABLE transactions ADD COLUMN IF NOT EXISTS cashreceived DECIMAL DEFAULT 0;
+                        ALTER TABLE transactions ADD COLUMN IF NOT EXISTS change DECIMAL DEFAULT 0;
+                        ALTER TABLE transactions ADD COLUMN IF NOT EXISTS isweekend BOOLEAN DEFAULT false;
+                        ALTER TABLE transactions ADD COLUMN IF NOT EXISTS rowversion BYTEA;
+                    ";
+                    context.Database.ExecuteSqlRaw(patchSql);
+
+                    Console.WriteLine(">>> DB: Manual Schema Creation & Patching Finished.");
                     context.Database.EnsureCreated();
                 }
                 catch (Exception ex)
