@@ -11,18 +11,36 @@ builder.Services.AddControllersWithViews();
 // Register ApplicationDbContext with Hybrid Support
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    var sqlConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    
+    // Render typically provides DATABASE_URL
     var pgConnectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
+    
+    // Check if we are running on Render
+    bool isRender = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("RENDER"));
 
-    if (!string.IsNullOrEmpty(pgConnectionString))
+    if (isRender && !string.IsNullOrEmpty(pgConnectionString))
     {
-        // Use PostgreSQL in Production (Render)
+        Console.WriteLine(">>> CLOUD MODE: PostgreSQL Detected on Render");
+        
+        // Handle 'postgres://' vs 'postgresql://'
+        if (pgConnectionString.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase))
+        {
+            pgConnectionString = "postgresql://" + pgConnectionString.Substring(11);
+        }
+
+        // Add SSL settings for Render PostgreSQL
+        if (!pgConnectionString.Contains("Ssl Mode"))
+        {
+            pgConnectionString += (pgConnectionString.Contains("?") ? "&" : "?") + "Ssl Mode=Require;Trust Server Certificate=true";
+        }
+
         options.UseNpgsql(pgConnectionString);
     }
     else
     {
-        // Use SQL Server locally
-        options.UseSqlServer(connectionString);
+        Console.WriteLine(">>> LOCAL MODE: Using SQL Server");
+        options.UseSqlServer(sqlConnectionString);
     }
 });
 
@@ -74,9 +92,9 @@ using (var scope = app.Services.CreateScope())
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
+    // Temporarily showing detailed errors in production to debug deployment
+    app.UseDeveloperExceptionPage(); 
     app.UseHsts();
-    // app.UseHttpsRedirection();
 }
 app.UseStaticFiles();
 
