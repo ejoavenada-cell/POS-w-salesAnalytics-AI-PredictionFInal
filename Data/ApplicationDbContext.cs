@@ -31,11 +31,32 @@ namespace FoodOrderingSytemAIAnalytics.Data
             }
             else
             {
+                // Postgres uses lowercase by convention for everything
+                foreach (var entity in modelBuilder.Model.GetEntityTypes())
+                {
+                    entity.SetTableName(entity.GetTableName()?.ToLower());
+                    
+                    foreach (var property in entity.GetProperties())
+                    {
+                        property.SetColumnName(property.GetColumnName().ToLower());
+                    }
+
+                    foreach (var key in entity.GetKeys())
+                    {
+                        key.SetName(key.GetName()?.ToLower());
+                    }
+
+                    foreach (var index in entity.GetIndexes())
+                    {
+                        index.SetDatabaseName(index.GetDatabaseName()?.ToLower());
+                    }
+                }
+
                 modelBuilder.Entity<TransactionDetail>()
                     .Property(td => td.Subtotal)
-                    .HasComputedColumnSql("Quantity * Price");
+                    .HasComputedColumnSql("quantity * price");
             }
-
+            
             // Configure Unique Constraints
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Name)

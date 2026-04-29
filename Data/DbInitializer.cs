@@ -12,7 +12,7 @@ namespace FoodOrderingSytemAIAnalytics.Data
         {
             if (context.Database.IsSqlServer())
             {
-                // Ensure existing tables are updated to decimal (SQL Server Patches)
+                // SQL Server specific patches
                 string alterTablesSql = @"
                     IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Products]') AND name = 'Stock' AND (type_name(system_type_id) = 'int' OR type_name(system_type_id) = 'numeric'))
                     BEGIN
@@ -44,54 +44,22 @@ namespace FoodOrderingSytemAIAnalytics.Data
                             CONSTRAINT [FK_RestockHistory_Products_ProductId] FOREIGN KEY ([ProductId]) REFERENCES [dbo].[Products] ([Id]) ON DELETE CASCADE
                         );
                         CREATE INDEX [IX_RestockHistory_ProductId] ON [dbo].[RestockHistory] ([ProductId]);
-                    END
-                    ELSE
-                    BEGIN
-                        IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[RestockHistory]') AND name = 'QuantityRestocked' AND type_name(system_type_id) = 'int')
-                        BEGIN
-                            ALTER TABLE [dbo].[RestockHistory] ALTER COLUMN [QuantityRestocked] decimal(18,2) NOT NULL;
-                            ALTER TABLE [dbo].[RestockHistory] ALTER COLUMN [StockAfterRestock] decimal(18,2) NOT NULL;
-                        END
-                    END
-                    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[StoreSettings]') AND name = 'AIForecastHorizonHours')
-                    BEGIN
-                        ALTER TABLE [dbo].[StoreSettings] ADD [AIForecastHorizonHours] int NOT NULL DEFAULT 720;
-                        ALTER TABLE [dbo].[StoreSettings] ADD [AISensitivity] float NOT NULL DEFAULT 0.1;
-                        ALTER TABLE [dbo].[StoreSettings] ADD [AISeasonalityMode] nvarchar(max) NOT NULL DEFAULT 'multiplicative';
-                    END
-                    
-                    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[StoreSettings]') AND name = 'LastAISync')
-                    BEGIN
-                        ALTER TABLE [dbo].[StoreSettings] ADD [LastAISync] datetime2 NULL;
                     END";
                 
-                context.Database.ExecuteSqlRaw(alterTablesSql);
+                try { context.Database.ExecuteSqlRaw(alterTablesSql); } catch { }
             }
             else
             {
                 Console.WriteLine(">>> DB: Initializing PostgreSQL Schema...");
                 try 
                 {
-                    // Force create the StoreSettings table manually to ensure it exists
-                    string createSettingsSql = @"
-                        CREATE TABLE IF NOT EXISTS ""StoreSettings"" (
-                            ""Id"" SERIAL PRIMARY KEY,
-                            ""StoreName"" TEXT,
-                            ""CurrencySymbol"" TEXT,
-                            ""TaxRate"" DECIMAL,
-                            ""AIForecastHorizonHours"" INTEGER DEFAULT 720,
-                            ""AISensitivity"" DOUBLE PRECISION DEFAULT 0.1,
-                            ""AISeasonalityMode"" TEXT DEFAULT 'multiplicative',
-                            ""LastAISync"" TIMESTAMP
-                        );";
-                    context.Database.ExecuteSqlRaw(createSettingsSql);
-                    
+                    // For Postgres, EnsureCreated is the most reliable way to build a fresh schema
                     context.Database.EnsureCreated();
-                    Console.WriteLine(">>> DB: PostgreSQL Schema Verified/Created.");
+                    Console.WriteLine(">>> DB: PostgreSQL Schema Verified.");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($">>> DB ERROR: Could not create schema: {ex.Message}");
+                    Console.WriteLine($">>> DB ERROR: {ex.Message}");
                 }
             }
             
@@ -122,25 +90,16 @@ namespace FoodOrderingSytemAIAnalytics.Data
 
         public static void SeedProducts(ApplicationDbContext context)
         {
+            if (context.Products.Any()) return;
             var seedProducts = new List<Product>
             {
                 new Product { Code = "P-001", Name = "Signature Burger", Price = 12.99m, Stock = 100, Category = "Meals", IsActive = true, DateIntroduced = DateTime.Now.AddMonths(-3) },
                 new Product { Code = "P-002", Name = "Crispy Fries", Price = 4.50m, Stock = 200, Category = "Sides", IsActive = true, DateIntroduced = DateTime.Now.AddMonths(-3) },
                 new Product { Code = "P-003", Name = "Coca Cola", Price = 2.50m, Stock = 150, Category = "Drinks", IsActive = true, DateIntroduced = DateTime.Now.AddMonths(-3) },
                 new Product { Code = "P-004", Name = "Chocolate Sundae", Price = 5.99m, Stock = 50, Category = "Desserts", IsActive = true, DateIntroduced = DateTime.Now.AddMonths(-3) },
-                new Product { Code = "P-005", Name = "Chicken Nuggets", Price = 8.00m, Stock = 80, Category = "Meals", IsActive = true, DateIntroduced = DateTime.Now.AddMonths(-3) },
-                new Product { Code = "P-006", Name = "Red Wine", Price = 45.00m, Stock = 20, Category = "Drinks", IsActive = true, DateIntroduced = DateTime.Now.AddMonths(-2) },
-                new Product { Code = "P-007", Name = "Grilled Salmon", Price = 24.50m, Stock = 15, Category = "Meals", IsActive = true, DateIntroduced = DateTime.Now.AddMonths(-1) },
-                new Product { Code = "P-008", Name = "Caesar Salad", Price = 9.99m, Stock = 40, Category = "Sides", IsActive = true, DateIntroduced = DateTime.Now.AddMonths(-1) }
+                new Product { Code = "P-005", Name = "Chicken Nuggets", Price = 8.00m, Stock = 80, Category = "Meals", IsActive = true, DateIntroduced = DateTime.Now.AddMonths(-3) }
             };
-
-            foreach (var p in seedProducts)
-            {
-                if (!context.Products.Any(x => x.Code == p.Code))
-                {
-                    context.Products.Add(p);
-                }
-            }
+            context.Products.AddRange(seedProducts);
             context.SaveChanges();
         }
 
@@ -153,14 +112,13 @@ namespace FoodOrderingSytemAIAnalytics.Data
 
             foreach (var product in products)
             {
-                for (int i = 0; i < 4; i++)
+                for (int i = 0; i < 2; i++)
                 {
-                    var date = DateTime.Now.AddDays(-rand.Next(1, 30));
                     context.RestockHistory.Add(new RestockHistory
                     {
                         ProductId = product.Id,
                         QuantityRestocked = rand.Next(100, 300),
-                        RestockDate = date,
+                        RestockDate = DateTime.Now.AddDays(-rand.Next(1, 30)),
                         StockAfterRestock = 500 - rand.Next(0, 50),
                         Remarks = "Initial Seed Restock"
                     });
