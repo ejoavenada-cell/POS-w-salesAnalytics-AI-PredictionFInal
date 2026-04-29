@@ -75,7 +75,7 @@ namespace FoodOrderingSytemAIAnalytics.Data
         {
             if (!context.StoreSettings.Any())
             {
-                context.StoreSettings.Add(new StoreSettings
+                context.StoreSettings.Add(new StoreSetting
                 {
                     StoreName = "Tasty Station",
                     CurrencySymbol = "$",
