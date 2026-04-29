@@ -69,13 +69,24 @@ namespace FoodOrderingSytemAIAnalytics.Data
             }
             else
             {
-                // For PostgreSQL / Other, use EF Core to create the schema if it doesn't exist
-                context.Database.EnsureCreated();
+                Console.WriteLine(">>> DB: Initializing PostgreSQL Schema...");
+                try 
+                {
+                    context.Database.EnsureCreated();
+                    Console.WriteLine(">>> DB: PostgreSQL Schema Verified/Created.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($">>> DB ERROR: Could not create schema: {ex.Message}");
+                    throw;
+                }
             }
             
             // Call individual seeders
+            Console.WriteLine(">>> DB: Seeding Data...");
             SeedProducts(context);
             SeedRestockHistory(context);
+            Console.WriteLine(">>> DB: Seeding Complete.");
         }
 
         public static void SeedProducts(ApplicationDbContext context)
@@ -111,7 +122,6 @@ namespace FoodOrderingSytemAIAnalytics.Data
 
             foreach (var product in products)
             {
-                // Create 3-4 restock events in the last month
                 for (int i = 0; i < 4; i++)
                 {
                     var date = DateTime.Now.AddDays(-rand.Next(1, 30));
@@ -120,7 +130,7 @@ namespace FoodOrderingSytemAIAnalytics.Data
                         ProductId = product.Id,
                         QuantityRestocked = rand.Next(100, 300),
                         RestockDate = date,
-                        StockAfterRestock = 500 - rand.Next(0, 50), // Simulation
+                        StockAfterRestock = 500 - rand.Next(0, 50),
                         Remarks = "Initial Seed Restock"
                     });
                 }
