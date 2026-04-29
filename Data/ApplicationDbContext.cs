@@ -31,6 +31,12 @@ namespace FoodOrderingSytemAIAnalytics.Data
             }
             else
             {
+                // Postgres does not auto-generate byte[] Timestamp columns like SQL Server does.
+                // Ignoring them prevents DbUpdateException during inserts.
+                modelBuilder.Entity<User>().Ignore(u => u.RowVersion);
+                modelBuilder.Entity<Product>().Ignore(p => p.RowVersion);
+                modelBuilder.Entity<Transaction>().Ignore(t => t.RowVersion);
+
                 // Postgres uses lowercase by convention for everything
                 foreach (var entity in modelBuilder.Model.GetEntityTypes())
                 {

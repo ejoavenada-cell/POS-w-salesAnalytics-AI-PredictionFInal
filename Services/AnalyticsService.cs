@@ -320,7 +320,7 @@ namespace FoodOrderingSytemAIAnalytics.Services
             
             // ... (AI Forecast logic) ...
             var lastDayRevenue = dailyTrends.LastOrDefault()?.Revenue ?? 1000;
-            var averageDailyRevenue = dailyTrends.Average(t => t.Revenue);
+            var averageDailyRevenue = dailyTrends.Any() ? dailyTrends.Average(t => t.Revenue) : 1000m;
             var velocity = (double)((lastDayRevenue - averageDailyRevenue) / (averageDailyRevenue > 0 ? averageDailyRevenue : 1));
             
             var forecast = new List<SalesTrendViewModel>();
