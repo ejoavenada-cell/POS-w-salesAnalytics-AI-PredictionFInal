@@ -23,19 +23,28 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     {
         Console.WriteLine(">>> CLOUD MODE: PostgreSQL Detected on Render");
         
-        // Handle 'postgres://' vs 'postgresql://'
-        if (pgConnectionString.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase))
+        try 
         {
-            pgConnectionString = "postgresql://" + pgConnectionString.Substring(11);
-        }
+            // Parse the postgres://user:pass@host:port/database URL
+            var uri = new Uri(pgConnectionString);
+            var userInfo = uri.UserInfo.Split(':');
 
-        // Add SSL settings for Render PostgreSQL
-        if (!pgConnectionString.Contains("Ssl Mode"))
+            var port = uri.Port <= 0 ? 5432 : uri.Port;
+            var connStr = $"Host={uri.Host};" +
+                          $"Port={port};" +
+                          $"Username={userInfo[0]};" +
+                          $"Password={userInfo[1]};" +
+                          $"Database={uri.LocalPath.TrimStart('/')};" +
+                          $"Ssl Mode=Require;Trust Server Certificate=true;";
+
+            options.UseNpgsql(connStr);
+        }
+        catch (Exception ex)
         {
-            pgConnectionString += (pgConnectionString.Contains("?") ? "&" : "?") + "Ssl Mode=Require;Trust Server Certificate=true";
+            Console.WriteLine($">>> ERROR Parsing DATABASE_URL: {ex.Message}");
+            // Fallback to trying the string as-is if it's not a URI
+            options.UseNpgsql(pgConnectionString);
         }
-
-        options.UseNpgsql(pgConnectionString);
     }
     else
     {
