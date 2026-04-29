@@ -72,21 +72,52 @@ namespace FoodOrderingSytemAIAnalytics.Data
                 Console.WriteLine(">>> DB: Initializing PostgreSQL Schema...");
                 try 
                 {
+                    // Force create the StoreSettings table manually to ensure it exists
+                    string createSettingsSql = @"
+                        CREATE TABLE IF NOT EXISTS ""StoreSettings"" (
+                            ""Id"" SERIAL PRIMARY KEY,
+                            ""StoreName"" TEXT,
+                            ""CurrencySymbol"" TEXT,
+                            ""TaxRate"" DECIMAL,
+                            ""AIForecastHorizonHours"" INTEGER DEFAULT 720,
+                            ""AISensitivity"" DOUBLE PRECISION DEFAULT 0.1,
+                            ""AISeasonalityMode"" TEXT DEFAULT 'multiplicative',
+                            ""LastAISync"" TIMESTAMP
+                        );";
+                    context.Database.ExecuteSqlRaw(createSettingsSql);
+                    
                     context.Database.EnsureCreated();
                     Console.WriteLine(">>> DB: PostgreSQL Schema Verified/Created.");
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($">>> DB ERROR: Could not create schema: {ex.Message}");
-                    throw;
                 }
             }
             
             // Call individual seeders
             Console.WriteLine(">>> DB: Seeding Data...");
+            SeedStoreSettings(context);
             SeedProducts(context);
             SeedRestockHistory(context);
             Console.WriteLine(">>> DB: Seeding Complete.");
+        }
+
+        public static void SeedStoreSettings(ApplicationDbContext context)
+        {
+            if (!context.StoreSettings.Any())
+            {
+                context.StoreSettings.Add(new StoreSettings
+                {
+                    StoreName = "Tasty Station",
+                    CurrencySymbol = "$",
+                    TaxRate = 0.08m,
+                    AIForecastHorizonHours = 720,
+                    AISensitivity = 0.1,
+                    AISeasonalityMode = "multiplicative"
+                });
+                context.SaveChanges();
+            }
         }
 
         public static void SeedProducts(ApplicationDbContext context)
