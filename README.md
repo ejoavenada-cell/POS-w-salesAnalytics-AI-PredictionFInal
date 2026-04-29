@@ -62,5 +62,5 @@ Tasty Station provides four layers of intelligence:
 ---
 
 ## 👨‍💻 Developed By
-**Antigravity AI** & **The Tasty Station Team**
+**Erick** & **Antigravity AI**
 *"Building the future of restaurant intelligence, one dish at a time."*

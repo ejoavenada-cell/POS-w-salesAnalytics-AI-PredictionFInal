@@ -74,11 +74,14 @@
             </nav>
 
             <div class="sidebar-bottom">
-                <form asp-controller="Auth" asp-action="Logout" method="post">
+                <form asp-controller="Auth" asp-action="Logout" method="post" style="margin-bottom: 0.5rem;">
                     <button type="submit" class="sidebar-link">
                         <i class="fas fa-sign-out-alt"></i><span>Exit</span>
                     </button>
                 </form>
+                <div style="padding: 0 1.25rem 1rem; font-size: 0.65rem; color: #9CA3AF; font-weight: 700; text-align: center; opacity: 0.8;">
+                    Developed by <span style="color: var(--primary-color);">Erick</span>
+                </div>
             </div>
         </aside>
 
